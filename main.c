@@ -19,9 +19,18 @@ char *showPrompt()
     char hostname[MAX_BUF];
     gethostname(hostname, MAX_BUF);
 
-    if (strcmp(path, getenv("HOME")) == 0)
+    char homeDir[MAX_BUF];
+    strcpy(homeDir, "/home/");
+    strcat(homeDir, user);
+
+    // check if homedir in path
+    char *homeDirInPath = strstr(path, homeDir);
+
+    char newPath[MAX_BUF];
+    if (homeDirInPath == path)
     {
-        strcpy(path, "~");
+        strcpy(newPath, "~");
+        strcat(newPath, homeDirInPath + strlen(homeDir));
     }
 
     printf("<");
@@ -32,7 +41,7 @@ char *showPrompt()
     printf(":");
     blue();
     bold();
-    printf("%s", path);
+    printf("%s", newPath);
     reset();
     printf("> ");
 
@@ -43,7 +52,6 @@ char *showPrompt()
 
 int main(void)
 {
-
     while (1)
     {
         char *in = showPrompt();
