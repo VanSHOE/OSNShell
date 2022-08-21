@@ -3,9 +3,10 @@
 #include <unistd.h>
 #include <string.h>
 #include "colors.h"
+#include "builtin.h"
 
 #ifndef MAX_BUF
-#define MAX_BUF 200
+#define MAX_BUF 2000
 #endif
 
 char *showPrompt()
@@ -52,18 +53,81 @@ char *showPrompt()
 
 int main(void)
 {
-    while (1)
+    int exitFlag = 0;
+    while (!exitFlag)
     {
         char *in = showPrompt();
-        if (strcmp(in, "exit\n") == 0)
+        // copy in
+        char *input = (char *)malloc(strlen(in) + 1);
+        strcpy(input, in);
+
+        // count tokens
+        int tokens = 0;
+        char *token = strtok(input, ";&");
+        while (token != NULL)
         {
-            break;
+            tokens++;
+            token = strtok(NULL, ";&");
         }
-        else
+
+        // create cmd array of strings malloc
+        char **cmdArray = (char **)malloc(sizeof(char *) * tokens);
+        cmdArray[0] = strtok(in, ";&");
+        // printf("%s\n", cmdArray[0]);
+        for (int i = 1; i < tokens; i++)
         {
-            printf("%s", in);
+            cmdArray[i] = strtok(NULL, ";&");
         }
+
+        for (int i = 0; i < tokens; i++)
+        {
+            char *cmd = cmdArray[i];
+            // copy
+            char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
+            strcpy(cmdCopy, cmd);
+            // count arguments
+            int args = 0;
+            char *arg = strtok(cmdCopy, " \t\n");
+            while (arg != NULL)
+            {
+                args++;
+                arg = strtok(NULL, " \t\n");
+            }
+
+            // create arg array of strings malloc
+            char **argArray = (char **)malloc(sizeof(char *) * args);
+            argArray[0] = strtok(cmd, " \t\n");
+            for (int j = 1; j < args; j++)
+            {
+                argArray[j] = strtok(NULL, " \t\n");
+            }
+
+            for (int j = 0; j < args; j++)
+            {
+                printf("|%s|", argArray[j]);
+            }
+            printf("\n");
+
+            continue;
+            if (strcmp(in, "exit\n") == 0)
+            {
+                exitFlag = 1;
+                break;
+            }
+            else if (strcmp(in, "pwd\n") == 0)
+            {
+                char path[MAX_BUF];
+                getcwd(path, MAX_BUF);
+                printf("%s\n", path);
+            }
+            else
+            {
+                printf("%s", in);
+            }
+        }
+
         free(in);
     }
+
     return 0;
 }
