@@ -76,6 +76,10 @@ int main(void)
 
         // create cmd array of strings malloc
         char **cmdArray = (char **)malloc(sizeof(char *) * tokens);
+        if (tokens == 0)
+        {
+            continue;
+        }
         cmdArray[0] = strtok(in, ";&");
         // printf("%s\n", cmdArray[0]);
         for (int i = 1; i < tokens; i++)
@@ -99,6 +103,10 @@ int main(void)
             }
 
             // create arg array of strings malloc
+            if (args == 0)
+            {
+                continue;
+            }
             char **argArray = (char **)malloc(sizeof(char *) * args);
             argArray[0] = strtok(cmd, " \t\n");
             for (int j = 1; j < args; j++)
