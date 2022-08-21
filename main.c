@@ -42,7 +42,7 @@ char *showPrompt()
     printf(":");
     blue();
     bold();
-    printf("%s", newPath);
+    printf("%s", path);
     reset();
     printf("> ");
 
@@ -102,27 +102,26 @@ int main(void)
                 argArray[j] = strtok(NULL, " \t\n");
             }
 
-            for (int j = 0; j < args; j++)
-            {
-                printf("|%s|", argArray[j]);
-            }
-            printf("\n");
-
-            continue;
-            if (strcmp(in, "exit\n") == 0)
+            if (strcmp(argArray[0], "exit") == 0)
             {
                 exitFlag = 1;
                 break;
             }
-            else if (strcmp(in, "pwd\n") == 0)
+            else if (strcmp(argArray[0], "pwd") == 0)
             {
-                char path[MAX_BUF];
-                getcwd(path, MAX_BUF);
-                printf("%s\n", path);
+                pwd();
+            }
+            else if (strcmp(argArray[0], "echo") == 0)
+            {
+                echo(argArray, args);
+            }
+            else if (strcmp(argArray[0], "cd") == 0)
+            {
+                cd(argArray, args);
             }
             else
             {
-                printf("%s", in);
+                printf("Command not found: %s\n", in);
             }
         }
 
