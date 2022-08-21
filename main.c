@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <dirent.h>
 #include "colors.h"
 #include "builtin.h"
-
-#ifndef MAX_BUF
-#define MAX_BUF 2000
-#endif
+#include "globalData.h"
 
 char *showPrompt()
 {
@@ -20,18 +18,17 @@ char *showPrompt()
     char hostname[MAX_BUF];
     gethostname(hostname, MAX_BUF);
 
-    char homeDir[MAX_BUF];
-    strcpy(homeDir, "/home/");
-    strcat(homeDir, user);
-
-    // check if homedir in path
-    char *homeDirInPath = strstr(path, homeDir);
+    char *homeDirInPath = strstr(path, shellHome);
 
     char newPath[MAX_BUF];
     if (homeDirInPath == path)
     {
         strcpy(newPath, "~");
-        strcat(newPath, homeDirInPath + strlen(homeDir));
+        strcat(newPath, homeDirInPath + strlen(shellHome));
+    }
+    else
+    {
+        strcpy(newPath, path);
     }
 
     printf("<");
@@ -42,7 +39,7 @@ char *showPrompt()
     printf(":");
     blue();
     bold();
-    printf("%s", path);
+    printf("%s", newPath);
     reset();
     printf("> ");
 
@@ -54,6 +51,13 @@ char *showPrompt()
 int main(void)
 {
     int exitFlag = 0;
+    // set current path as shell home malloc
+    shellHome = (char *)malloc(MAX_BUF);
+    getcwd(shellHome, MAX_BUF);
+
+    cmdHistoryHead = NULL;
+    OLDPWD = NULL;
+
     while (!exitFlag)
     {
         char *in = showPrompt();
@@ -118,6 +122,21 @@ int main(void)
             else if (strcmp(argArray[0], "cd") == 0)
             {
                 cd(argArray, args);
+            }
+            else if (strcmp(argArray[0], "ls") == 0)
+            {
+                // list files
+                DIR *d;
+                struct dirent *dir;
+                d = opendir(".");
+                if (d)
+                {
+                    while ((dir = readdir(d)) != NULL)
+                    {
+                        printf("%s\n", dir->d_name);
+                    }
+                    closedir(d);
+                }
             }
             else
             {
