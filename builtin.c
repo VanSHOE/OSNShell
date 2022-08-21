@@ -51,7 +51,17 @@ void cd(char *args[], int argc)
         }
         else
         {
-            result = chdir(args[1]);
+            char newPath[MAX_BUF];
+            if (args[1][0] == '~')
+            {
+                strcpy(newPath, shellHome);
+                strcat(newPath, args[1] + 1);
+            }
+            else
+            {
+                strcpy(newPath, args[1]);
+            }
+            result = chdir(newPath);
         }
     }
     else
