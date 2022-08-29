@@ -148,7 +148,7 @@ int main(void)
             }
             else
             {
-                printf("Command not found: %s\n", in);
+                printf("Command not found: %s\n", argArray[0]);
             }
         }
 
