@@ -65,7 +65,6 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
-        addtoMem(in);
         // add ; after every &
         char *inCopy = (char *)malloc(2000);
         int j = 0;
@@ -135,6 +134,8 @@ int main(void)
             {
                 argArray[j] = strtok(NULL, " \t\n");
             }
+
+            addtoMem(argArray, args);
 
             if (strcmp(argArray[0], "exit") == 0)
             {
