@@ -5,6 +5,7 @@
 #include <string.h>
 #include <dirent.h>
 #include "colors.h"
+#include "history.h"
 #include "builtin.h"
 #include "delegateCommands.h"
 #include "globalData.h"
@@ -58,12 +59,13 @@ int main(void)
     shellHome = (char *)malloc(MAX_BUF);
     getcwd(shellHome, MAX_BUF);
 
-    cmdHistoryHead = NULL;
+    readHistory();
     OLDPWD = NULL;
 
     while (!exitFlag)
     {
         char *in = showPrompt();
+        addtoMem(in);
         // add ; after every &
         char *inCopy = (char *)malloc(2000);
         int j = 0;

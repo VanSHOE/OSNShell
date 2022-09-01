@@ -2,15 +2,10 @@ char *shellHome;
 #ifndef MAX_BUF
 #define MAX_BUF 2000
 #endif
-struct cmdHistory
-{
-    char *cmd;
-    struct cmdHistory *next;
-    struct cmdHistory *prev;
-};
 
-struct cmdHistory *cmdHistoryHead;
-
+#define historyLen 20
+char *cmdHistory[historyLen];
+int curHistHead;
 char *OLDPWD;
 
 int curBackground;
