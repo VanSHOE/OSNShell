@@ -169,6 +169,10 @@ int main(void)
                     closedir(d);
                 }
             }
+            else if (strcmp(argArray[0], "history") == 0)
+            {
+                printHistory();
+            }
             else
             {
                 argArray[args] = NULL;
