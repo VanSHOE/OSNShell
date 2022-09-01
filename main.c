@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include <string.h>
 #include <dirent.h>
 #include "colors.h"
 #include "builtin.h"
+#include "delegateCommands.h"
 #include "globalData.h"
 
 char *showPrompt()
@@ -51,6 +53,7 @@ char *showPrompt()
 int main(void)
 {
     int exitFlag = 0;
+    curBackground = 0;
     // set current path as shell home malloc
     shellHome = (char *)malloc(MAX_BUF);
     getcwd(shellHome, MAX_BUF);
@@ -61,17 +64,34 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
+        // add ; after every &
+        char *inCopy = (char *)malloc(2000);
+        int j = 0;
+        for (int i = 0; i < strlen(in); i++)
+        {
+            if (in[i] == '&')
+            {
+                inCopy[j++] = '&';
+                inCopy[j++] = ';';
+            }
+            else
+            {
+                inCopy[j++] = in[i];
+            }
+        }
+        inCopy[j] = '\0';
+        strcpy(in, inCopy);
         // copy in
         char *input = (char *)malloc(strlen(in) + 1);
         strcpy(input, in);
 
         // count tokens
         int tokens = 0;
-        char *token = strtok(input, ";&");
+        char *token = strtok(input, ";");
         while (token != NULL)
         {
             tokens++;
-            token = strtok(NULL, ";&");
+            token = strtok(NULL, ";");
         }
 
         // create cmd array of strings malloc
@@ -80,11 +100,11 @@ int main(void)
         {
             continue;
         }
-        cmdArray[0] = strtok(in, ";&");
+        cmdArray[0] = strtok(in, ";");
         // printf("%s\n", cmdArray[0]);
         for (int i = 1; i < tokens; i++)
         {
-            cmdArray[i] = strtok(NULL, ";&");
+            cmdArray[i] = strtok(NULL, ";");
         }
 
         for (int i = 0; i < tokens; i++)
@@ -107,7 +127,7 @@ int main(void)
             {
                 continue;
             }
-            char **argArray = (char **)malloc(sizeof(char *) * args);
+            char **argArray = (char **)malloc(sizeof(char *) * (args + 1));
             argArray[0] = strtok(cmd, " \t\n");
             for (int j = 1; j < args; j++)
             {
@@ -148,7 +168,15 @@ int main(void)
             }
             else
             {
-                printf("Command not found: %s\n", argArray[0]);
+                argArray[args] = NULL;
+                if (!strcmp(argArray[args - 1], "&"))
+                {
+                    delegate(argArray[0], argArray, 1);
+                }
+                else
+                {
+                    delegate(argArray[0], argArray, 0);
+                }
             }
         }
 

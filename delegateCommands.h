@@ -1,0 +1,1 @@
+void delegate(char *command, char *args[], int background);

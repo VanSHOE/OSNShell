@@ -12,3 +12,5 @@ struct cmdHistory
 struct cmdHistory *cmdHistoryHead;
 
 char *OLDPWD;
+
+int curBackground;
