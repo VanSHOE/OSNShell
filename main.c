@@ -239,7 +239,7 @@ int main(void)
             }
             else if (strcmp(argArray[0], "ls") == 0)
             {
-                // list files
+                ls(argArray, args);
             }
             else if (strcmp(argArray[0], "history") == 0)
             {

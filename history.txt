@@ -1,1 +1,1 @@
-make;./r;hi;asd;zxc;hi;gedit;hi;asd;xzc;gedit;asdsa &;asgas &;make;make &;g;safas &;adas &;asda &;asdsa &;
+make &;g;safas &;adas &;asda &;asdsa &;ls;ls -a;ls;ls -l;ls;cd ..;ls;cd OSNA2;ls;ls -a;ls -l;ls -a;s;ls;

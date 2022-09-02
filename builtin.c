@@ -87,26 +87,39 @@ void cd(char *args[], int argc)
 
 void ls(char *args[], int argc)
 {
-    if (argc == 1)
+    if (argc > 4)
     {
-        printf("ls: missing operand\n");
+        printf("Too many arguments\n");
+        return;
     }
-    else
+    else if (argc == 1)
     {
-        printf("ls: %s\n", args[1]);
-    }
-
-    return;
-
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(".");
-    if (d)
-    {
-        while ((dir = readdir(d)) != NULL)
+        DIR *dir = opendir(".");
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL)
         {
-            printf("%s\n", dir->d_name);
+            if (entry->d_name[0] != '.')
+            {
+                printf("%s\n", entry->d_name);
+            }
         }
-        closedir(d);
+        closedir(dir);
+    }
+    else if (argc == 2)
+    {
+        if (strcmp(args[1], "-a") == 0)
+        {
+            DIR *dir = opendir(".");
+            struct dirent *entry;
+            while ((entry = readdir(dir)) != NULL)
+            {
+                printf("%s\n", entry->d_name);
+            }
+            closedir(dir);
+        }
+        else
+        {
+            printf("Invalid argument\n");
+        }
     }
 }
