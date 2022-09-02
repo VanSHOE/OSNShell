@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 
 void delegate(char *command, char *args[], int background)
 {
@@ -22,7 +23,10 @@ void delegate(char *command, char *args[], int background)
         }
         else
         {
-            printf("[%d] %d\n", ++curBackground, pid);
+            backgroundJobs[curbackgroundJobs].pid = pid;
+            backgroundJobs[curbackgroundJobs].name = (char *)malloc(strlen(command) + 1);
+            strcpy(backgroundJobs[curbackgroundJobs].name, command);
+            printf("[%d] %d\n", ++curbackgroundJobs, pid);
         }
     }
 }

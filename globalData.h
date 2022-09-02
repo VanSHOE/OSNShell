@@ -9,4 +9,11 @@ int curHistHead;
 int curHistTail;
 char *OLDPWD;
 
-int curBackground;
+struct job
+{
+    int pid;
+    char *name;
+};
+
+struct job backgroundJobs[10000];
+int curbackgroundJobs;

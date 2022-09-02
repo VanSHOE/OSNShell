@@ -1,1 +1,1 @@
-7;8;9;0;11;history;[A;history;hi;history;nana;history;no;history;hitsory;history;
+sleep 1 &;ls;sleep 2 &;sleep 3 &;sleep 2 &;sleep 4 &;sleep 3;sleep 1 &;sleep 2 &;sleep 3;clear;sleep 1&;sleep 2&;sleep 3;sleep 1 &;sleep 2 &;sleep 3 &;sleep 1;sleep 3 &;sleep 2;
