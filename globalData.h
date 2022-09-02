@@ -17,3 +17,5 @@ struct job
 
 struct job backgroundJobs[10000];
 int curbackgroundJobs;
+
+double lastTime;

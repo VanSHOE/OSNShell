@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
+#include <time.h>
 
 void printPrompt()
 {
@@ -47,6 +48,10 @@ void printPrompt()
     bold();
     printf("%s", newPath);
     reset();
+    if (lastTime >= 1)
+    {
+        printf("took %.17gs", (double)lastTime);
+    }
     printf("> ");
 }
 
@@ -127,6 +132,7 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
+        lastTime = 0;
         // add ; after every &
         char *inCopy = (char *)malloc(2000);
         int j = 0;
@@ -242,10 +248,13 @@ int main(void)
                 {
                     argArray[args - 1] = NULL;
                     delegate(argArray[0], argArray, 1);
+                    lastTime = 0;
                 }
                 else
                 {
+                    lastTime = time(NULL);
                     delegate(argArray[0], argArray, 0);
+                    lastTime = time(NULL) - lastTime;
                 }
             }
         }
