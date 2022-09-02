@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 void pwd()
 {
@@ -93,5 +94,19 @@ void ls(char *args[], int argc)
     else
     {
         printf("ls: %s\n", args[1]);
+    }
+
+    return;
+
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            printf("%s\n", dir->d_name);
+        }
+        closedir(d);
     }
 }

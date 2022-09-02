@@ -20,6 +20,14 @@ void delegate(char *command, char *args[], int background)
         {
             int status;
             waitpid(pid, &status, 0);
+            if (WIFEXITED(status))
+            {
+                // printf("%d", WEXITSTATUS(status));
+                if (WEXITSTATUS(status) == 255)
+                {
+                    printf("%s: command not found\n", command);
+                }
+            }
         }
         else
         {

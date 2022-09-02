@@ -3,7 +3,6 @@
 #include <unistd.h>
 
 #include <string.h>
-#include <dirent.h>
 #include "colors.h"
 #include "history.h"
 #include "builtin.h"
@@ -74,35 +73,51 @@ void childDead()
         {
             if (backgroundJobs[i].pid == pid)
             {
-
-                printf("\n%s with pid = %d exited ", backgroundJobs[i].name, pid);
-                if (WIFEXITED(status))
+                if (WEXITSTATUS(status) == 255)
                 {
-                    printf("normally.\n");
-                    fflush(stdout);
-                    printPrompt();
-                    fflush(stdout);
-                }
-                else if (WIFSIGNALED(status))
-                {
-                    printf("abnormally with signal = %d\n", WTERMSIG(status));
-                    fflush(stdout);
-                    printPrompt();
-                    fflush(stdout);
-                }
-                else if (WIFSTOPPED(status))
-                {
-                    printf("abnormally with signal = %d\n", WSTOPSIG(status));
-                    fflush(stdout);
+                    printf("\n%s: command not found\n", backgroundJobs[i].name);
                     printPrompt();
                     fflush(stdout);
                 }
                 else
                 {
-                    printf("abnormally\n");
-                    fflush(stdout);
-                    printPrompt();
-                    fflush(stdout);
+                    printf("\n%s with pid = %d exited ", backgroundJobs[i].name, pid);
+                    if (WIFEXITED(status))
+                    {
+
+                        if (WEXITSTATUS(status) == 0)
+                        {
+                            printf("normally.\n");
+                        }
+                        else
+                        {
+                            printf("abnormally with status = %d\n", WEXITSTATUS(status));
+                        }
+
+                        printPrompt();
+                        fflush(stdout);
+                    }
+                    else if (WIFSIGNALED(status))
+                    {
+                        printf("abnormally with signal = %d\n", WTERMSIG(status));
+                        fflush(stdout);
+                        printPrompt();
+                        fflush(stdout);
+                    }
+                    else if (WIFSTOPPED(status))
+                    {
+                        printf("abnormally with signal = %d\n", WSTOPSIG(status));
+                        fflush(stdout);
+                        printPrompt();
+                        fflush(stdout);
+                    }
+                    else
+                    {
+                        printf("abnormally\n");
+                        fflush(stdout);
+                        printPrompt();
+                        fflush(stdout);
+                    }
                 }
 
                 for (int j = i; j < curbackgroundJobs; j++)
@@ -225,17 +240,6 @@ int main(void)
             else if (strcmp(argArray[0], "ls") == 0)
             {
                 // list files
-                DIR *d;
-                struct dirent *dir;
-                d = opendir(".");
-                if (d)
-                {
-                    while ((dir = readdir(d)) != NULL)
-                    {
-                        printf("%s\n", dir->d_name);
-                    }
-                    closedir(d);
-                }
             }
             else if (strcmp(argArray[0], "history") == 0)
             {

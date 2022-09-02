@@ -1,1 +1,1 @@
-sleep 3;sleep 1 &;sleep 2 &;sleep 3 &;sleep 1;sleep 3 &;sleep 2;poweroff;sleep 2;make;sleep 2;sleep 2.2;sleep 2.1;sleep 2;sleep 2.3;sleep 2.5;echo hi;ls;vim;vi;
+make;./r;hi;asd;zxc;hi;gedit;hi;asd;xzc;gedit;asdsa &;asgas &;make;make &;g;safas &;adas &;asda &;asdsa &;
