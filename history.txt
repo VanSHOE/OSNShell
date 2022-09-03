@@ -1,1 +1,1 @@
-make &;g;safas &;adas &;asda &;asdsa &;ls;ls -a;ls;ls -l;ls;cd ..;ls;cd OSNA2;ls;ls -a;ls -l;ls -a;s;ls;
+ls;pinfo;sleep 10 &;pinfo 4409;sleep 10 &;pinfo 4681;pinfo 4914;pinfo 5003;pinfo 3365;pinfo 6351;pinfo 6438;pinfo 6476;pinfo 6593;pinfo;make;pinfo;sleep 10 &;pinfo 6926;pinfo;pinfo 8280;

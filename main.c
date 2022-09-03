@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <string.h>
 #include "colors.h"
 #include "history.h"
@@ -244,6 +243,17 @@ int main(void)
             else if (strcmp(argArray[0], "history") == 0)
             {
                 printHistory();
+            }
+            else if (strcmp(argArray[0], "pinfo") == 0)
+            {
+                if (args == 1)
+                {
+                    pinfo(-1);
+                }
+                else
+                {
+                    pinfo(atoi(argArray[1]));
+                }
             }
             else
             {

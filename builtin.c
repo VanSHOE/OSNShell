@@ -123,3 +123,65 @@ void ls(char *args[], int argc)
         }
     }
 }
+
+void pinfo(int pid)
+{
+    if (pid == -1)
+    {
+        pid = getpid();
+    }
+
+    char procStatPath[100];
+    sprintf(procStatPath, "/proc/%d/stat", pid);
+    FILE *procStat = fopen(procStatPath, "r");
+
+    // check if file doesnt exist
+    if (procStat == NULL)
+    {
+        printf("Process with pid %d does not exist\n", pid);
+        return;
+    }
+
+    char state;
+    unsigned long int mem;
+    pid_t bgGrp, fgGrp;
+
+    fscanf(procStat, "%*d %*s %c %*d %d %*d %*d %d %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*d %*d %*u %lu", &state, &bgGrp, &fgGrp, &mem);
+    fclose(procStat);
+
+    char exePath[100];
+    char procExePath[100];
+    sprintf(procExePath, "/proc/%d/exe", pid);
+    int len = readlink(procExePath, exePath, 100);
+    exePath[len] = '\0';
+    printf("pid : %d\nprocess Status : %c", pid, state);
+    if (bgGrp == fgGrp)
+    {
+        // check if exists in background jobs
+        int bg = 0;
+        for (int i = 0; i < curbackgroundJobs; i++)
+        {
+            if (backgroundJobs[i].pid == pid)
+            {
+                bg = 1;
+                break;
+            }
+        }
+
+        if (!bg)
+            printf("+");
+    }
+    char *homeDirInPath = strstr(exePath, shellHome);
+
+    char newPath[MAX_BUF];
+    if (homeDirInPath == exePath)
+    {
+        strcpy(newPath, "~");
+        strcat(newPath, homeDirInPath + strlen(shellHome));
+    }
+    else
+    {
+        strcpy(newPath, exePath);
+    }
+    printf("\nmemory : %lu\nexecutable Path : %s\n", mem, newPath);
+}
