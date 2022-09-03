@@ -1,1 +1,1 @@
-ls;pinfo;sleep 10 &;pinfo 4409;sleep 10 &;pinfo 4681;pinfo 4914;pinfo 5003;pinfo 3365;pinfo 6351;pinfo 6438;pinfo 6476;pinfo 6593;pinfo;make;pinfo;sleep 10 &;pinfo 6926;pinfo;pinfo 8280;
+discover hi;discover .;discover -d;discover -f;make;discover hi;dsicover hi;discover hi;dicover object;discover object;discover sad;discover settings.json;discover -d settings.json;discover -l settings.json;discover -f settings.json;discover settings.json -f;discover settings.json -d;discover settings.json -d .vscode;discover settings.json -f .vscode;discover settings.json -f ./.vscode;

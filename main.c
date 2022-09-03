@@ -255,6 +255,10 @@ int main(void)
                     pinfo(atoi(argArray[1]));
                 }
             }
+            else if (strcmp(argArray[0], "discover") == 0)
+            {
+                discover(argArray, args);
+            }
             else
             {
                 argArray[args] = NULL;

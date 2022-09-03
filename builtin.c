@@ -6,6 +6,15 @@
 #include <string.h>
 #include <dirent.h>
 
+int isFlag(char *arg)
+{
+    if (arg[0] == '-')
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void pwd()
 {
     char path[200];
@@ -83,6 +92,133 @@ void cd(char *args[], int argc)
         }
         strcpy(OLDPWD, cwd);
     }
+}
+
+void discoverRecurse(char *path, int allFile, int allDir, char *name)
+{
+    int nameMatch = name == NULL ? 1 : 0;
+    if (name != NULL)
+    {
+        int i = strlen(path) - 1;
+        while (path[i] != '/' && i != 0)
+        {
+            i--;
+        }
+
+        if (path[i] == '/')
+        {
+            i++;
+        }
+
+        if (strcmp(path + i, name) == 0)
+        {
+            nameMatch = 1;
+        }
+    }
+
+    DIR *dir = opendir(path);
+    struct dirent *entry;
+
+    if (dir == NULL)
+    {
+        if (allFile && nameMatch)
+        {
+            printf("%s\n", path);
+        }
+
+        return;
+    }
+    if (allDir && nameMatch)
+    {
+        printf("%s\n", path);
+    }
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        char *newPath = (char *)malloc(MAX_BUF);
+        strcpy(newPath, path);
+        strcat(newPath, "/");
+        strcat(newPath, entry->d_name);
+        discoverRecurse(newPath, allFile, allDir, name);
+        free(newPath);
+    }
+}
+
+void discover(char *args[], int argc)
+{
+    // equivalent of find command
+    if (argc > 5)
+    {
+        printf("Too many arguments\n");
+        return;
+    }
+
+    int anyFlag = 0;
+    int allFile = 0;
+    int allDir = 0;
+    char *name = NULL;
+    char *path = (char *)malloc(MAX_BUF);
+    strcpy(path, ".");
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (isFlag(args[i]))
+        {
+            anyFlag = 1;
+            if (strcmp(args[i], "-f") == 0)
+            {
+                allFile = 1;
+            }
+            else if (strcmp(args[i], "-d") == 0)
+            {
+                allDir = 1;
+            }
+            else if (strcmp(args[i], "-df") == 0 || strcmp(args[i], "-fd") == 0)
+            {
+                allDir = 1;
+                allFile = 1;
+            }
+            else
+            {
+                printf("Invalid flag(s)\n");
+                return;
+            }
+            continue;
+        }
+
+        // check if dir
+        DIR *dir = opendir(args[i]);
+        if (dir != NULL)
+        {
+            // path = args[i];
+            strcpy(path, args[i]);
+            closedir(dir);
+            continue;
+        }
+
+        // check if name
+        if (name == NULL)
+        {
+            name = (char *)malloc(MAX_BUF);
+            // name = args[i];
+            strcpy(name, args[i]);
+            continue;
+        }
+
+        printf("Invalid argument: %s\n", args[i]);
+    }
+    if (!anyFlag)
+    {
+        allFile = 1;
+        allDir = 1;
+    }
+    discoverRecurse(path, allFile, allDir, name);
+    free(name);
+    free(path);
 }
 
 void ls(char *args[], int argc)
