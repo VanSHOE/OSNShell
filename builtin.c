@@ -216,8 +216,25 @@ void discover(char *args[], int argc)
         allFile = 1;
         allDir = 1;
     }
-    discoverRecurse(path, allFile, allDir, name);
+    // if name has quotes, remove
+    char *rectifiedName = (char *)malloc(MAX_BUF);
+    if (name != NULL && name[0] == '"' && name[strlen(name) - 1] == '"')
+    {
+
+        for (int i = 1; i < strlen(name) - 1; i++)
+        {
+            rectifiedName[i - 1] = name[i];
+        }
+        rectifiedName[strlen(name) - 2] = '\0';
+    }
+    else
+    {
+        strcpy(rectifiedName, name);
+    }
+
+    discoverRecurse(path, allFile, allDir, rectifiedName);
     free(name);
+    free(rectifiedName);
     free(path);
 }
 
