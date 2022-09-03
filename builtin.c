@@ -341,13 +341,18 @@ void ls(char *args[], int argc)
                 {
                     continue;
                 }
-                if (isDir(entry->d_name))
+                char *pathToFile = (char *)malloc(MAX_BUF);
+                strcpy(pathToFile, dirs[i]);
+                strcat(pathToFile, "/");
+                strcat(pathToFile, entry->d_name);
+
+                if (isDir(pathToFile))
                 {
 
                     blue();
                     bold();
                 }
-                else if (isExecutable(entry->d_name))
+                else if (isExecutable(pathToFile))
                 {
 
                     green();
@@ -372,6 +377,21 @@ void ls(char *args[], int argc)
 
             DIR *dir = opendir(dirs[i]);
             struct dirent *entry;
+            // get number of files
+            int count = 0;
+            while ((entry = readdir(dir)) != NULL)
+            {
+                if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                {
+                    continue;
+                }
+                count++;
+            }
+            closedir(dir);
+            dir = opendir(dirs[i]);
+
+            struct lsLEntry *lsEntries = (struct lsLEntry *)malloc(sizeof(struct lsLEntry) * count);
+            int index = 0;
 
             while ((entry = readdir(dir)) != NULL)
             {
@@ -385,6 +405,8 @@ void ls(char *args[], int argc)
                 strcat(path, "/");
                 strcat(path, entry->d_name);
                 stat(path, &path_stat);
+                lsEntries->path = (char *)malloc(strlen(path));
+                strcpy(lsEntries->path, path);
                 free(path);
 
                 char fileType;
@@ -421,7 +443,9 @@ void ls(char *args[], int argc)
                     fileType = 'n';
                 }
 
-                printf("%c", fileType);
+                // printf("%c", fileType);
+                lsEntries[index].fileType = fileType;
+
                 char permissions[10];
                 // check for sticky and setgid bit
                 permissions[0] = (path_stat.st_mode & S_IRUSR) ? 'r' : '-';
@@ -456,40 +480,50 @@ void ls(char *args[], int argc)
                 }
                 permissions[9] = '\0';
 
-                printf("%s ", permissions);
+                // printf("%s ", permissions);
+                strcpy(lsEntries[index].permissions, permissions);
 
-                printf("%ld ", path_stat.st_nlink);
+                // printf("%ld ", path_stat.st_nlink);
+                lsEntries[index].nlink = path_stat.st_nlink;
 
                 struct passwd *pw = getpwuid(path_stat.st_uid);
                 struct group *gr = getgrgid(path_stat.st_gid);
 
-                printf("%s %s ", pw->pw_name, gr->gr_name);
+                // printf("%s %s ", pw->pw_name, gr->gr_name);
+                lsEntries[index].owner = (char *)malloc(strlen(pw->pw_name));
+                strcpy(lsEntries[index].owner, pw->pw_name);
+                lsEntries[index].group = (char *)malloc(strlen(gr->gr_name));
+                strcpy(lsEntries[index].group, gr->gr_name);
 
-                printf("%ld ", path_stat.st_size);
+                // printf("%ld ", path_stat.st_size);
+                lsEntries[index].size = path_stat.st_size;
 
                 char *time = ctime(&path_stat.st_mtime);
                 time[strlen(time) - 1] = '\0';
-                printf("%s ", time);
+                // printf("%s ", time);
+                lsEntries[index].time = (char *)malloc(strlen(time));
 
-                if (isDir(entry->d_name))
-                {
-                    blue();
-                    bold();
-                }
-                else if (isExecutable(entry->d_name))
-                {
+                // printf("%s\n", entry->d_name);
+                lsEntries[index].name = (char *)malloc(strlen(entry->d_name));
+                strcpy(lsEntries[index].name, entry->d_name);
 
-                    green();
-                    bold();
-                }
-
-                printf("%s\n", entry->d_name);
-                reset();
+                index++;
             }
 
             closedir(dir);
             if (i != dirCount - 1)
                 printf("\n");
+
+            // free all lesentries
+            for (int i = 0; i < count; i++)
+            {
+                free(lsEntries[i].owner);
+                free(lsEntries[i].group);
+                free(lsEntries[i].time);
+                free(lsEntries[i].name);
+            }
+
+            free(lsEntries);
         }
     }
 

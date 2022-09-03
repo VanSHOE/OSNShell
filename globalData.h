@@ -19,3 +19,16 @@ struct job backgroundJobs[10000];
 int curbackgroundJobs;
 
 double lastTime;
+
+struct lsLEntry
+{
+    char fileType;
+    char permissions[10];
+    int nlink;
+    char *owner;
+    char *group;
+    int size;
+    char *time;
+    char *name;
+    char *path;
+};
