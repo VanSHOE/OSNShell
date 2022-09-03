@@ -1,10 +1,12 @@
 #include "builtin.h"
 #include "globalData.h"
+#include "colors.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 int isFlag(char *arg)
 {
@@ -238,6 +240,20 @@ void discover(char *args[], int argc)
     free(path);
 }
 
+int isExecutable(char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode) && (path_stat.st_mode & S_IXUSR);
+}
+
+int isDir(char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISDIR(path_stat.st_mode);
+}
+
 void ls(char *args[], int argc)
 {
     int dirCount = 0;
@@ -297,6 +313,55 @@ void ls(char *args[], int argc)
                 return;
             }
         }
+    }
+
+    if (dirCount == 0)
+    {
+        dirs[dirCount] = (char *)malloc(MAX_BUF);
+        strcpy(dirs[dirCount], ".");
+        dirCount++;
+    }
+
+    if (l == 0)
+    {
+        for (int i = 0; i < dirCount; i++)
+        {
+            if (dirCount != 1)
+                printf("%s:\n", dirs[i]);
+
+            DIR *dir = opendir(dirs[i]);
+            struct dirent *entry;
+
+            while ((entry = readdir(dir)) != NULL)
+            {
+                if (a == 0 && entry->d_name[0] == '.')
+                {
+                    continue;
+                }
+                if (isDir(entry->d_name))
+                {
+
+                    blue();
+                    bold();
+                }
+                else if (isExecutable(entry->d_name))
+                {
+
+                    green();
+                    bold();
+                }
+
+                printf("%s\n", entry->d_name);
+                reset();
+            }
+
+            closedir(dir);
+            if (i != dirCount - 1)
+                printf("\n");
+        }
+    }
+    else
+    {
     }
 
     for (int i = 0; i < dirCount; i++)
