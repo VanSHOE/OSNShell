@@ -195,26 +195,33 @@ void discover(char *args[], int argc)
             continue;
         }
 
+        if (name == NULL && args[i][0] == '"' && args[i][strlen(args[i]) - 1] == '"')
+        {
+            name = (char *)malloc(MAX_BUF);
+            strcpy(name, args[i]);
+            continue;
+        }
+
         // check if dir
         DIR *dir = opendir(args[i]);
+        // printf("%s\n", args[i]);
+        // fflush(stdout);
         if (dir != NULL)
         {
             // path = args[i];
+            // printf("%s\n", args[i]);
+            // fflush(stdout);
             strcpy(path, args[i]);
+            // printf("%s\n", path);
+            // fflush(stdout);
             closedir(dir);
             continue;
         }
 
         // check if name
-        if (name == NULL)
-        {
-            name = (char *)malloc(MAX_BUF);
-            // name = args[i];
-            strcpy(name, args[i]);
-            continue;
-        }
 
         printf("Invalid argument: %s\n", args[i]);
+        return;
     }
     if (!anyFlag)
     {
@@ -222,8 +229,10 @@ void discover(char *args[], int argc)
         allDir = 1;
     }
     // if name has quotes, remove
+    // printf("allFile: %d, allDir: %d, name: %s, path: %s\n", allFile, allDir, name, path);
+    // fflush(stdout);
     char *rectifiedName = (char *)malloc(MAX_BUF);
-    if (name != NULL && name[0] == '"' && name[strlen(name) - 1] == '"')
+    if (name != NULL && strlen(name) >= 1 && name[0] == '"' && name[strlen(name) - 1] == '"')
     {
 
         for (int i = 1; i < strlen(name) - 1; i++)
@@ -234,12 +243,19 @@ void discover(char *args[], int argc)
     }
     else
     {
-        strcpy(rectifiedName, name);
+        if (name != NULL)
+            strcpy(rectifiedName, name);
+        else
+            rectifiedName = NULL;
     }
-
+    // print all args
+    // printf("allFile: %d, allDir: %d, name: %s, path: %s\n", allFile, allDir, rectifiedName, path);
+    // fflush(stdout);
     discoverRecurse(path, allFile, allDir, rectifiedName);
-    free(name);
-    free(rectifiedName);
+    if (name != NULL)
+        free(name);
+    if (rectifiedName != NULL)
+        free(rectifiedName);
     free(path);
 }
 
@@ -255,6 +271,20 @@ int isDir(char *path)
     struct stat path_stat;
     stat(path, &path_stat);
     return S_ISDIR(path_stat.st_mode);
+}
+
+int getDigits(int x)
+{
+    if (x == 0)
+        return 1;
+
+    int digits = 0;
+    while (x != 0)
+    {
+        x /= 10;
+        digits++;
+    }
+    return digits;
 }
 
 void ls(char *args[], int argc)
@@ -502,6 +532,7 @@ void ls(char *args[], int argc)
                 time[strlen(time) - 1] = '\0';
                 // printf("%s ", time);
                 lsEntries[index].time = (char *)malloc(strlen(time));
+                strcpy(lsEntries[index].time, time);
 
                 // printf("%s\n", entry->d_name);
                 lsEntries[index].name = (char *)malloc(strlen(entry->d_name));
@@ -510,11 +541,52 @@ void ls(char *args[], int argc)
                 index++;
             }
 
+            // find max length of each field
+            int maxLinks = 0;
+            int maxOwner = 0;
+            int maxGroup = 0;
+            int maxSize = 0;
+            int maxDate = 0;
+            int maxName = 0;
+            for (int i = 0; i < count; i++)
+            {
+                if (maxLinks < lsEntries[i].nlink)
+                {
+                    maxLinks = lsEntries[i].nlink;
+                }
+                if (maxOwner < strlen(lsEntries[i].owner))
+                {
+                    maxOwner = strlen(lsEntries[i].owner);
+                }
+                if (maxGroup < strlen(lsEntries[i].group))
+                {
+                    maxGroup = strlen(lsEntries[i].group);
+                }
+                if (maxSize < lsEntries[i].size)
+                {
+                    maxSize = lsEntries[i].size;
+                }
+                if (maxDate < strlen(lsEntries[i].time))
+                {
+                    maxDate = strlen(lsEntries[i].time);
+                }
+                if (maxName < strlen(lsEntries[i].name))
+                {
+                    maxName = strlen(lsEntries[i].name);
+                }
+            }
+            maxLinks = getDigits(maxLinks);
+            maxSize = getDigits(maxSize);
+
+            for (int i = 0; i < count; i++)
+            {
+                printf("%c%s %*d %-*s %-*s %*d %s %s\n", lsEntries[i].fileType, lsEntries[i].permissions, maxLinks, lsEntries[i].nlink, maxOwner, lsEntries[i].owner, maxGroup, lsEntries[i].group, maxSize, lsEntries[i].size, lsEntries[i].time, lsEntries[i].name);
+            }
+
             closedir(dir);
             if (i != dirCount - 1)
                 printf("\n");
 
-            // free all lesentries
             for (int i = 0; i < count; i++)
             {
                 free(lsEntries[i].owner);
