@@ -411,7 +411,7 @@ void ls(char *args[], int argc)
             int count = 0;
             while ((entry = readdir(dir)) != NULL)
             {
-                if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                if (a == 0 && entry->d_name[0] == '.')
                 {
                     continue;
                 }
@@ -432,11 +432,15 @@ void ls(char *args[], int argc)
                 struct stat path_stat;
                 char *path = (char *)malloc(MAX_BUF);
                 strcpy(path, dirs[i]);
+                // printf("dir here: %s\n", path);s
                 strcat(path, "/");
+                // printf("dir here: %s\n", path);
                 strcat(path, entry->d_name);
+                // printf("dir here: %s\n", path);
+                lsEntries[index].path = (char *)malloc(strlen(path));
+                strcpy(lsEntries[index].path, path);
                 stat(path, &path_stat);
-                lsEntries->path = (char *)malloc(strlen(path));
-                strcpy(lsEntries->path, path);
+
                 free(path);
 
                 char fileType;
@@ -529,13 +533,18 @@ void ls(char *args[], int argc)
                 lsEntries[index].size = path_stat.st_size;
 
                 char *time = ctime(&path_stat.st_mtime);
-                time[strlen(time) - 1] = '\0';
-                // printf("%s ", time);
+
+                // printf("Working here");
+                // fflush(stdout);
                 lsEntries[index].time = (char *)malloc(strlen(time));
                 strcpy(lsEntries[index].time, time);
+                // remove newline
+                lsEntries[index].time[strlen(time) - 1] = '\0';
 
                 // printf("%s\n", entry->d_name);
                 lsEntries[index].name = (char *)malloc(strlen(entry->d_name));
+                // printf("Working here");
+                // fflush(stdout);
                 strcpy(lsEntries[index].name, entry->d_name);
 
                 index++;
@@ -548,8 +557,21 @@ void ls(char *args[], int argc)
             int maxSize = 0;
             int maxDate = 0;
             int maxName = 0;
+
             for (int i = 0; i < count; i++)
             {
+                // print all values
+                // printf("fileType: %c\n", lsEntries[i].fileType);
+                // printf("permissions: %s\n", lsEntries[i].permissions);
+                // printf("nlink: %d\n", lsEntries[i].nlink);
+                // printf("owner: %s\n", lsEntries[i].owner);
+                // printf("group: %s\n", lsEntries[i].group);
+                // printf("size: %d\n", lsEntries[i].size);
+                // printf("time: %s\n", lsEntries[i].time);
+                // printf("name: %s\n", lsEntries[i].name);
+                // printf("path: %s\n", lsEntries[i].path);
+                // printf("\n");
+                // fflush(stdout);
                 if (maxLinks < lsEntries[i].nlink)
                 {
                     maxLinks = lsEntries[i].nlink;
@@ -593,6 +615,7 @@ void ls(char *args[], int argc)
                 free(lsEntries[i].group);
                 free(lsEntries[i].time);
                 free(lsEntries[i].name);
+                free(lsEntries[i].path);
             }
 
             free(lsEntries);
