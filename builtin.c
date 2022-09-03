@@ -7,6 +7,9 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
 
 int isFlag(char *arg)
 {
@@ -454,6 +457,19 @@ void ls(char *args[], int argc)
                 permissions[9] = '\0';
 
                 printf("%s ", permissions);
+
+                printf("%ld ", path_stat.st_nlink);
+
+                struct passwd *pw = getpwuid(path_stat.st_uid);
+                struct group *gr = getgrgid(path_stat.st_gid);
+
+                printf("%s %s ", pw->pw_name, gr->gr_name);
+
+                printf("%ld ", path_stat.st_size);
+
+                char *time = ctime(&path_stat.st_mtime);
+                time[strlen(time) - 1] = '\0';
+                printf("%s ", time);
 
                 if (isDir(entry->d_name))
                 {
