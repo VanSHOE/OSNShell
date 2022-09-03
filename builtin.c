@@ -240,40 +240,72 @@ void discover(char *args[], int argc)
 
 void ls(char *args[], int argc)
 {
-    if (argc > 4)
+    int dirCount = 0;
+    int fileCount = 0;
+
+    char *dirs[argc];
+    char *files[argc];
+
+    int l = 0;
+    int a = 0;
+
+    for (int i = 1; i < argc; i++)
     {
-        printf("Too many arguments\n");
-        return;
-    }
-    else if (argc == 1)
-    {
-        DIR *dir = opendir(".");
-        struct dirent *entry;
-        while ((entry = readdir(dir)) != NULL)
+        if (isFlag(args[i]))
         {
-            if (entry->d_name[0] != '.')
+            for (int j = 1; j < strlen(args[i]); j++)
             {
-                printf("%s\n", entry->d_name);
+                if (args[i][j] == 'l')
+                {
+                    l = 1;
+                }
+                else if (args[i][j] == 'a')
+                {
+                    a = 1;
+                }
+                else
+                {
+                    printf("Invalid flag: %c\n", args[i][j]);
+                    return;
+                }
             }
+
+            continue;
         }
-        closedir(dir);
-    }
-    else if (argc == 2)
-    {
-        if (strcmp(args[1], "-a") == 0)
+
+        DIR *dir = opendir(args[i]);
+        if (dir != NULL)
         {
-            DIR *dir = opendir(".");
-            struct dirent *entry;
-            while ((entry = readdir(dir)) != NULL)
-            {
-                printf("%s\n", entry->d_name);
-            }
+            dirs[dirCount] = (char *)malloc(MAX_BUF);
+            strcpy(dirs[dirCount], args[i]);
+            dirCount++;
             closedir(dir);
         }
         else
         {
-            printf("Invalid argument\n");
+            FILE *file = fopen(args[i], "r");
+            if (file != NULL)
+            {
+                files[fileCount] = (char *)malloc(MAX_BUF);
+                strcpy(files[fileCount], args[i]);
+                fileCount++;
+                fclose(file);
+            }
+            else
+            {
+                printf("ls: cannot access '%s': No such file or directory\n", args[i]);
+                return;
+            }
         }
+    }
+
+    for (int i = 0; i < dirCount; i++)
+    {
+        free(dirs[i]);
+    }
+    for (int i = 0; i < fileCount; i++)
+    {
+        free(files[i]);
     }
 }
 
