@@ -362,6 +362,100 @@ void ls(char *args[], int argc)
     }
     else
     {
+        for (int i = 0; i < dirCount; i++)
+        {
+            if (dirCount != 1)
+                printf("%s:\n", dirs[i]);
+
+            DIR *dir = opendir(dirs[i]);
+            struct dirent *entry;
+
+            while ((entry = readdir(dir)) != NULL)
+            {
+                if (a == 0 && entry->d_name[0] == '.')
+                {
+                    continue;
+                }
+                struct stat path_stat;
+                char *path = (char *)malloc(MAX_BUF);
+                strcpy(path, dirs[i]);
+                strcat(path, "/");
+                strcat(path, entry->d_name);
+                stat(path, &path_stat);
+                free(path);
+
+                char fileType;
+                if (S_ISREG(path_stat.st_mode))
+                {
+                    fileType = '-';
+                }
+                else if (S_ISDIR(path_stat.st_mode))
+                {
+                    fileType = 'd';
+                }
+                else if (S_ISCHR(path_stat.st_mode))
+                {
+                    fileType = 'c';
+                }
+                else if (S_ISBLK(path_stat.st_mode))
+                {
+                    fileType = 'b';
+                }
+                else if (S_ISFIFO(path_stat.st_mode))
+                {
+                    fileType = 'p';
+                }
+                else if (S_ISLNK(path_stat.st_mode))
+                {
+                    fileType = 'l';
+                }
+                else if (S_ISSOCK(path_stat.st_mode))
+                {
+                    fileType = 's';
+                }
+                else
+                {
+                    fileType = 'n';
+                }
+
+                printf("%c", fileType);
+                char permissions[10];
+                permissions[0] = (path_stat.st_mode & S_IRUSR) ? 'r' : '-';
+                permissions[1] = (path_stat.st_mode & S_IWUSR) ? 'w' : '-';
+                permissions[2] = (path_stat.st_mode & S_IXUSR) ? 'x' : '-';
+
+                permissions[3] = (path_stat.st_mode & S_IRGRP) ? 'r' : '-';
+                permissions[4] = (path_stat.st_mode & S_IWGRP) ? 'w' : '-';
+                permissions[5] = (path_stat.st_mode & S_IXGRP) ? 'x' : '-';
+
+                permissions[6] = (path_stat.st_mode & S_IROTH) ? 'r' : '-';
+                permissions[7] = (path_stat.st_mode & S_IWOTH) ? 'w' : '-';
+                permissions[8] = (path_stat.st_mode & S_IXOTH) ? 'x' : '-';
+
+                permissions[9] = '\0';
+
+                printf("%s ", permissions);
+
+                if (isDir(entry->d_name))
+                {
+                    blue();
+                    bold();
+                }
+                else if (isExecutable(entry->d_name))
+                {
+
+                    green();
+                    bold();
+                }
+
+                printf("%s\n", entry->d_name);
+                reset();
+            }
+
+            closedir(dir);
+            if (i != dirCount - 1)
+                printf("\n");
+        }
     }
 
     for (int i = 0; i < dirCount; i++)
