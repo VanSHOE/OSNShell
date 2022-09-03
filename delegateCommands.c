@@ -11,6 +11,8 @@ void delegate(char *command, char *args[], int background)
     pid_t pid = fork();
     if (pid == 0)
     {
+        if (background == 1)
+            setpgid(0, 0);
         int ret = execvp(command, args);
         exit(ret);
     }

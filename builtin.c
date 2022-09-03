@@ -342,19 +342,19 @@ void pinfo(int pid)
     printf("pid : %d\nprocess Status : %c", pid, state);
     if (bgGrp == fgGrp)
     {
-        // check if exists in background jobs
-        int bg = 0;
-        for (int i = 0; i < curbackgroundJobs; i++)
-        {
-            if (backgroundJobs[i].pid == pid)
-            {
-                bg = 1;
-                break;
-            }
-        }
+        // // check if exists in background jobs
+        // int bg = 0;
+        // for (int i = 0; i < curbackgroundJobs; i++)
+        // {
+        //     if (backgroundJobs[i].pid == pid)
+        //     {
+        //         bg = 1;
+        //         break;
+        //     }
+        // }
 
-        if (!bg)
-            printf("+");
+        // if (!bg)
+        printf("+");
     }
     char *homeDirInPath = strstr(exePath, shellHome);
 
