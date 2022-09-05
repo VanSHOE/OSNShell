@@ -402,6 +402,7 @@ void ls(char *args[], int argc)
     {
         for (int i = 0; i < dirCount; i++)
         {
+            unsigned long long int total = 0;
             if (dirCount != 1)
                 printf("%s:\n", dirs[i]);
 
@@ -440,6 +441,7 @@ void ls(char *args[], int argc)
                 lsEntries[index].path = (char *)malloc(strlen(path));
                 strcpy(lsEntries[index].path, path);
                 stat(path, &path_stat);
+                total += path_stat.st_blocks;
 
                 free(path);
 
@@ -549,6 +551,7 @@ void ls(char *args[], int argc)
 
                 index++;
             }
+            printf("total %lld\n", total / 2);
 
             // find max length of each field
             int maxLinks = 0;
