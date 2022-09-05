@@ -348,7 +348,7 @@ void ls(char *args[], int argc)
         }
     }
 
-    if (dirCount == 0)
+    if (dirCount == 0 && fileCount == 0)
     {
         dirs[dirCount] = (char *)malloc(MAX_BUF);
         strcpy(dirs[dirCount], ".");
@@ -357,9 +357,16 @@ void ls(char *args[], int argc)
 
     if (l == 0)
     {
+        for (int i = 0; i < fileCount; i++)
+        {
+            if (a == 0 && files[i][0] == '.')
+                continue;
+            printf("%s\n", files[i]);
+        }
+
         for (int i = 0; i < dirCount; i++)
         {
-            if (dirCount != 1)
+            if (dirCount != 1 || fileCount)
                 printf("%s:\n", dirs[i]);
 
             DIR *dir = opendir(dirs[i]);
@@ -400,10 +407,193 @@ void ls(char *args[], int argc)
     }
     else
     {
+        struct lsLEntry *lsEntriesF = (struct lsLEntry *)malloc(sizeof(struct lsLEntry) * fileCount);
+        for (int index = 0; index < fileCount; index++)
+        {
+            if (a == 0 && files[index][0] == '.')
+                continue;
+            struct stat path_stat;
+            stat(files[index], &path_stat);
+
+            char fileType;
+            if (S_ISREG(path_stat.st_mode))
+            {
+                fileType = '-';
+            }
+            else if (S_ISDIR(path_stat.st_mode))
+            {
+                fileType = 'd';
+            }
+            else if (S_ISCHR(path_stat.st_mode))
+            {
+                fileType = 'c';
+            }
+            else if (S_ISBLK(path_stat.st_mode))
+            {
+                fileType = 'b';
+            }
+            else if (S_ISFIFO(path_stat.st_mode))
+            {
+                fileType = 'p';
+            }
+            else if (S_ISLNK(path_stat.st_mode))
+            {
+                fileType = 'l';
+            }
+            else if (S_ISSOCK(path_stat.st_mode))
+            {
+                fileType = 's';
+            }
+            else
+            {
+                fileType = 'n';
+            }
+
+            // printf("%c", fileType);
+            lsEntriesF[index].fileType = fileType;
+
+            char permissions[10];
+            // check for sticky and setgid bit
+            permissions[0] = (path_stat.st_mode & S_IRUSR) ? 'r' : '-';
+            permissions[1] = (path_stat.st_mode & S_IWUSR) ? 'w' : '-';
+            if (path_stat.st_mode & S_ISUID)
+            {
+                permissions[2] = (path_stat.st_mode & S_IXUSR) ? 's' : 'S';
+            }
+            else
+            {
+                permissions[2] = (path_stat.st_mode & S_IXUSR) ? 'x' : '-';
+            }
+            permissions[3] = (path_stat.st_mode & S_IRGRP) ? 'r' : '-';
+            permissions[4] = (path_stat.st_mode & S_IWGRP) ? 'w' : '-';
+            if (path_stat.st_mode & S_ISGID)
+            {
+                permissions[5] = (path_stat.st_mode & S_IXGRP) ? 's' : 'S';
+            }
+            else
+            {
+                permissions[5] = (path_stat.st_mode & S_IXGRP) ? 'x' : '-';
+            }
+            permissions[6] = (path_stat.st_mode & S_IROTH) ? 'r' : '-';
+            permissions[7] = (path_stat.st_mode & S_IWOTH) ? 'w' : '-';
+            if (path_stat.st_mode & S_ISVTX)
+            {
+                permissions[8] = (path_stat.st_mode & S_IXOTH) ? 't' : 'T';
+            }
+            else
+            {
+                permissions[8] = (path_stat.st_mode & S_IXOTH) ? 'x' : '-';
+            }
+            permissions[9] = '\0';
+
+            // printf("%s ", permissions);
+            strcpy(lsEntriesF[index].permissions, permissions);
+
+            // printf("%ld ", path_stat.st_nlink);
+            lsEntriesF[index].nlink = path_stat.st_nlink;
+
+            struct passwd *pw = getpwuid(path_stat.st_uid);
+            struct group *gr = getgrgid(path_stat.st_gid);
+
+            // printf("%s %s ", pw->pw_name, gr->gr_name);
+            lsEntriesF[index].owner = (char *)malloc(strlen(pw->pw_name));
+            strcpy(lsEntriesF[index].owner, pw->pw_name);
+            lsEntriesF[index].group = (char *)malloc(strlen(gr->gr_name));
+            strcpy(lsEntriesF[index].group, gr->gr_name);
+
+            // printf("%ld ", path_stat.st_size);
+            lsEntriesF[index].size = path_stat.st_size;
+
+            char *time = ctime(&path_stat.st_mtime);
+
+            // printf("Working here");
+            // fflush(stdout);
+            lsEntriesF[index].time = (char *)malloc(strlen(time));
+            strcpy(lsEntriesF[index].time, time);
+            // remove newline
+            lsEntriesF[index].time[strlen(time) - 1] = '\0';
+
+            // printf("%s\n", entry->d_name);
+            lsEntriesF[index].name = (char *)malloc(strlen(files[index]));
+            // printf("Working here");
+            // fflush(stdout);
+            strcpy(lsEntriesF[index].name, files[index]);
+            lsEntriesF[index].path = (char *)malloc(strlen(files[index]));
+            strcpy(lsEntriesF[index].path, files[index]);
+        }
+        int maxLinksF = 0;
+        int maxOwnerF = 0;
+        int maxGroupF = 0;
+        int maxSizeF = 0;
+        int maxDateF = 0;
+        int maxNameF = 0;
+
+        for (int i = 0; i < fileCount; i++)
+        {
+            if (maxLinksF < lsEntriesF[i].nlink)
+            {
+                maxLinksF = lsEntriesF[i].nlink;
+            }
+            if (maxOwnerF < strlen(lsEntriesF[i].owner))
+            {
+                maxOwnerF = strlen(lsEntriesF[i].owner);
+            }
+            if (maxGroupF < strlen(lsEntriesF[i].group))
+            {
+                maxGroupF = strlen(lsEntriesF[i].group);
+            }
+            if (maxSizeF < lsEntriesF[i].size)
+            {
+                maxSizeF = lsEntriesF[i].size;
+            }
+            if (maxDateF < strlen(lsEntriesF[i].time))
+            {
+                maxDateF = strlen(lsEntriesF[i].time);
+            }
+            if (maxNameF < strlen(lsEntriesF[i].name))
+            {
+                maxNameF = strlen(lsEntriesF[i].name);
+            }
+        }
+        maxLinksF = getDigits(maxLinksF);
+        maxSizeF = getDigits(maxSizeF);
+
+        for (int i = 0; i < fileCount; i++)
+        {
+            printf("%c%s %*d %-*s %-*s %*d %s ", lsEntriesF[i].fileType, lsEntriesF[i].permissions, maxLinksF, lsEntriesF[i].nlink, maxOwnerF, lsEntriesF[i].owner, maxGroupF, lsEntriesF[i].group, maxSizeF, lsEntriesF[i].size, lsEntriesF[i].time);
+
+            if (isDir(lsEntriesF[i].path))
+            {
+                blue();
+                bold();
+            }
+            else if (isExecutable(lsEntriesF[i].path))
+            {
+                green();
+                bold();
+            }
+
+            printf("%s\n", lsEntriesF[i].name);
+            reset();
+        }
+
+        for (int i = 0; i < fileCount; i++)
+        {
+            free(lsEntriesF[i].owner);
+            free(lsEntriesF[i].group);
+            free(lsEntriesF[i].time);
+            free(lsEntriesF[i].name);
+            free(lsEntriesF[i].path);
+        }
+
+        free(lsEntriesF);
+        if (dirCount)
+            printf("\n");
+
         for (int i = 0; i < dirCount; i++)
         {
             unsigned long long int total = 0;
-            if (dirCount != 1)
+            if (dirCount != 1 || fileCount)
                 printf("%s:\n", dirs[i]);
 
             DIR *dir = opendir(dirs[i]);
