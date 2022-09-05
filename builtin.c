@@ -10,6 +10,12 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <stdlib.h>
+
+int lsCmp(const void *a, const void *b)
+{
+    return strcmp((const char *)((struct lsLEntry *)a)->name, (const char *)((struct lsLEntry *)b)->name);
+}
 
 int isFlag(char *arg)
 {
@@ -558,6 +564,8 @@ void ls(char *args[], int argc)
         maxLinksF = getDigits(maxLinksF);
         maxSizeF = getDigits(maxSizeF);
 
+        qsort(lsEntriesF, fileCount, sizeof(struct lsLEntry), lsCmp);
+
         for (int i = 0; i < fileCount; i++)
         {
             printf("%c%s %*d %-*s %-*s %*d %s ", lsEntriesF[i].fileType, lsEntriesF[i].permissions, maxLinksF, lsEntriesF[i].nlink, maxOwnerF, lsEntriesF[i].owner, maxGroupF, lsEntriesF[i].group, maxSizeF, lsEntriesF[i].size, lsEntriesF[i].time);
@@ -792,7 +800,7 @@ void ls(char *args[], int argc)
             }
             maxLinks = getDigits(maxLinks);
             maxSize = getDigits(maxSize);
-
+            qsort(lsEntries, count, sizeof(struct lsLEntry), lsCmp);
             for (int i = 0; i < count; i++)
             {
                 printf("%c%s %*d %-*s %-*s %*d %s ", lsEntries[i].fileType, lsEntries[i].permissions, maxLinks, lsEntries[i].nlink, maxOwner, lsEntries[i].owner, maxGroup, lsEntries[i].group, maxSize, lsEntries[i].size, lsEntries[i].time);
@@ -873,18 +881,6 @@ void pinfo(int pid)
     printf("pid : %d\nprocess Status : %c", pid, state);
     if (bgGrp == fgGrp)
     {
-        // // check if exists in background jobs
-        // int bg = 0;
-        // for (int i = 0; i < curbackgroundJobs; i++)
-        // {
-        //     if (backgroundJobs[i].pid == pid)
-        //     {
-        //         bg = 1;
-        //         break;
-        //     }
-        // }
-
-        // if (!bg)
         printf("+");
     }
     char *homeDirInPath = strstr(exePath, shellHome);
