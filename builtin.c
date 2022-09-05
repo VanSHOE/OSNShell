@@ -602,7 +602,22 @@ void ls(char *args[], int argc)
 
             for (int i = 0; i < count; i++)
             {
-                printf("%c%s %*d %-*s %-*s %*d %s %s\n", lsEntries[i].fileType, lsEntries[i].permissions, maxLinks, lsEntries[i].nlink, maxOwner, lsEntries[i].owner, maxGroup, lsEntries[i].group, maxSize, lsEntries[i].size, lsEntries[i].time, lsEntries[i].name);
+                printf("%c%s %*d %-*s %-*s %*d %s ", lsEntries[i].fileType, lsEntries[i].permissions, maxLinks, lsEntries[i].nlink, maxOwner, lsEntries[i].owner, maxGroup, lsEntries[i].group, maxSize, lsEntries[i].size, lsEntries[i].time);
+
+                if (isDir(lsEntries[i].path))
+                {
+                    blue();
+                    bold();
+                }
+                else if (isExecutable(lsEntries[i].path))
+                {
+
+                    green();
+                    bold();
+                }
+
+                printf("%s\n", lsEntries[i].name);
+                reset();
             }
 
             closedir(dir);
