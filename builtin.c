@@ -229,18 +229,18 @@ void discover(char *args[], int argc)
         }
 
         // check if dir
-        DIR *dir = opendir(args[i]);
+        char *rectifiedPath = parsePathforHome(args[i]);
+        DIR *dir = opendir(rectifiedPath);
         // printf("%s\n", args[i]);
         // fflush(stdout);
         if (dir != NULL)
         {
-            char *rectifiedPath = parsePathforHome(args[i]);
             strcpy(path, rectifiedPath);
             free(rectifiedPath);
-
             closedir(dir);
             continue;
         }
+        free(rectifiedPath);
 
         // check if name
 
