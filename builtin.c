@@ -12,6 +12,26 @@
 #include <time.h>
 #include <stdlib.h>
 
+char *parsePathforHome(char *path)
+{
+    if (strlen(path) == 0)
+        return path;
+
+    char *newPath = (char *)malloc(sizeof(char) * (strlen(path) + strlen(shellHome)));
+
+    if ((strlen(path) == 1 && path[0] == '~') || (path[0] == '~' && path[1] == '/'))
+    {
+        strcpy(newPath, shellHome);
+        strcat(newPath, path + 1);
+    }
+    else
+    {
+        strcpy(newPath, path);
+    }
+
+    return newPath;
+}
+
 int lsCmp(const void *a, const void *b)
 {
     return strcmp((const char *)((struct lsLEntry *)a)->name, (const char *)((struct lsLEntry *)b)->name);
@@ -214,12 +234,10 @@ void discover(char *args[], int argc)
         // fflush(stdout);
         if (dir != NULL)
         {
-            // path = args[i];
-            // printf("%s\n", args[i]);
-            // fflush(stdout);
-            strcpy(path, args[i]);
-            // printf("%s\n", path);
-            // fflush(stdout);
+            char *rectifiedPath = parsePathforHome(args[i]);
+            strcpy(path, rectifiedPath);
+            free(rectifiedPath);
+
             closedir(dir);
             continue;
         }
@@ -328,30 +346,32 @@ void ls(char *args[], int argc)
             continue;
         }
 
-        DIR *dir = opendir(args[i]);
+        char *rectifiedPath = parsePathforHome(args[i]);
+        DIR *dir = opendir(rectifiedPath);
         if (dir != NULL)
         {
             dirs[dirCount] = (char *)malloc(MAX_BUF);
-            strcpy(dirs[dirCount], args[i]);
+            strcpy(dirs[dirCount], rectifiedPath);
             dirCount++;
             closedir(dir);
         }
         else
         {
-            FILE *file = fopen(args[i], "r");
+            FILE *file = fopen(rectifiedPath, "r");
             if (file != NULL)
             {
                 files[fileCount] = (char *)malloc(MAX_BUF);
-                strcpy(files[fileCount], args[i]);
+                strcpy(files[fileCount], rectifiedPath);
                 fileCount++;
                 fclose(file);
             }
             else
             {
-                printf("ls: cannot access '%s': No such file or directory\n", args[i]);
+                printf("ls: cannot access '%s': No such file or directory\n", rectifiedPath);
                 return;
             }
         }
+        free(rectifiedPath);
     }
 
     if (dirCount == 0 && fileCount == 0)

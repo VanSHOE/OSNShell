@@ -13,6 +13,13 @@ void delegate(char *command, char *args[], int background)
     {
         if (background == 1)
             setpgid(0, 0);
+
+        for (int i = 0; args[i] != NULL; i++)
+        {
+            char *temp = args[i];
+            args[i] = parsePathforHome(args[i]);
+        }
+
         int ret = execvp(command, args);
         exit(ret);
     }
