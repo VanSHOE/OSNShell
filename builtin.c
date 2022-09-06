@@ -32,6 +32,24 @@ char *parsePathforHome(char *path)
     return newPath;
 }
 
+char *reverseParsePath(char *path)
+{
+    char *homeDirInPath = strstr(path, shellHome);
+
+    char *newPath = (char *)malloc(strlen(path) + 1);
+    if (homeDirInPath == path)
+    {
+        strcpy(newPath, "~");
+        strcat(newPath, homeDirInPath + strlen(shellHome));
+    }
+    else
+    {
+        strcpy(newPath, path);
+    }
+
+    return newPath;
+}
+
 int lsCmp(const void *a, const void *b)
 {
     return strcmp((const char *)((struct lsLEntry *)a)->name, (const char *)((struct lsLEntry *)b)->name);
