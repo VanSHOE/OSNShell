@@ -164,6 +164,7 @@ int main(void)
         }
         inCopy[j] = '\0';
         strcpy(in, inCopy);
+        free(inCopy);
         // copy in
         char *input = (char *)malloc(strlen(in) + 1);
         strcpy(input, in);
@@ -204,6 +205,8 @@ int main(void)
                 args++;
                 arg = strtok(NULL, " \t\n");
             }
+
+            free(cmdCopy);
 
             // create arg array of strings malloc
             if (args == 0)
@@ -275,7 +278,10 @@ int main(void)
                     lastTime = time(NULL) - lastTime;
                 }
             }
+            free(argArray);
         }
+
+        free(cmdArray);
 
         free(in);
     }
