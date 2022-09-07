@@ -52,7 +52,22 @@ char *reverseParsePath(char *path)
 
 int lsCmp(const void *a, const void *b)
 {
+    // // check for . and ..
+    // if (strcmp(((struct lsLEntry *)a)->name, ".") == 0)
+    //     return -1;
+    // if (strcmp(((struct lsLEntry *)b)->name, ".") == 0)
+    //     return 1;
+    // if (strcmp(((struct lsLEntry *)a)->name, "..") == 0 && strcmp(((struct lsLEntry *)b)->name, ".") != 0)
+    //     return -1;
+    // if (strcmp(((struct lsLEntry *)b)->name, "..") == 0 && strcmp(((struct lsLEntry *)a)->name, ".") != 0)
+    //     return 1;
+
     return strcmp((const char *)((struct lsLEntry *)a)->name, (const char *)((struct lsLEntry *)b)->name);
+}
+
+int lsStringCmp(const void *a, const void *b)
+{
+    return strcmp((const char *)a, (const char *)b);
 }
 
 int isFlag(char *arg)
@@ -401,13 +416,13 @@ void ls(char *args[], int argc)
 
     if (l == 0)
     {
+        qsort(files, fileCount, sizeof(char *), lsStringCmp);
         for (int i = 0; i < fileCount; i++)
         {
-            if (a == 0 && files[i][0] == '.')
-                continue;
             printf("%s\n", files[i]);
         }
 
+        char **dirFiles = (char **)malloc(dirCount * sizeof(char *));
         for (int i = 0; i < dirCount; i++)
         {
             if (dirCount != 1 || fileCount)
@@ -440,7 +455,10 @@ void ls(char *args[], int argc)
                     bold();
                 }
 
-                printf("%s\n", entry->d_name);
+                // printf("%s\n", entry->d_name);
+                dirFiles[i] = (char *)malloc(strlen(entry->d_name) + 1);
+                strcpy(dirFiles[i], entry->d_name);
+
                 reset();
             }
 
@@ -454,8 +472,6 @@ void ls(char *args[], int argc)
         struct lsLEntry *lsEntriesF = (struct lsLEntry *)malloc(sizeof(struct lsLEntry) * fileCount);
         for (int index = 0; index < fileCount; index++)
         {
-            if (a == 0 && files[index][0] == '.')
-                continue;
             struct stat path_stat;
             stat(files[index], &path_stat);
 
