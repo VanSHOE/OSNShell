@@ -425,12 +425,28 @@ void ls(char *args[], int argc)
         char **dirFiles = (char **)malloc(dirCount * sizeof(char *));
         for (int i = 0; i < dirCount; i++)
         {
+
             if (dirCount != 1 || fileCount)
                 printf("%s:\n", dirs[i]);
 
             DIR *dir = opendir(dirs[i]);
             struct dirent *entry;
 
+            int count = 0;
+            while ((entry = readdir(dir)) != NULL)
+            {
+                if (a == 0 && entry->d_name[0] == '.')
+                {
+                    continue;
+                }
+                count++;
+            }
+            closedir(dir);
+
+            dir = opendir(dirs[i]);
+
+            struct lsLEntry *lsEntries = (struct lsLEntry *)malloc(count * sizeof(struct lsLEntry));
+            int index = 0;
             while ((entry = readdir(dir)) != NULL)
             {
                 if (a == 0 && entry->d_name[0] == '.')
@@ -441,6 +457,10 @@ void ls(char *args[], int argc)
                 strcpy(pathToFile, dirs[i]);
                 strcat(pathToFile, "/");
                 strcat(pathToFile, entry->d_name);
+                lsEntries[index].name = (char *)malloc(strlen(entry->d_name) + 1);
+                strcpy(lsEntries[index].name, entry->d_name);
+                lsEntries[index].path = (char *)malloc(strlen(pathToFile) + 1);
+                strcpy(lsEntries[index].path, pathToFile);
 
                 if (isDir(pathToFile))
                 {
@@ -460,9 +480,38 @@ void ls(char *args[], int argc)
                 strcpy(dirFiles[i], entry->d_name);
 
                 reset();
+                index++;
+            }
+            qsort(lsEntries, count, sizeof(struct lsLEntry), lsCmp);
+            for (int i = 0; i < count; i++)
+            {
+                char *pathToFile = lsEntries[i].path;
+
+                if (isDir(pathToFile))
+                {
+
+                    blue();
+                    bold();
+                }
+                else if (isExecutable(pathToFile))
+                {
+
+                    green();
+                    bold();
+                }
+
+                printf("%s\n", lsEntries[i].name);
+                reset();
             }
 
             closedir(dir);
+
+            for (int i = 0; i < count; i++)
+            {
+                free(lsEntries[i].name);
+                free(lsEntries[i].path);
+            }
+            free(lsEntries);
             if (i != dirCount - 1)
                 printf("\n");
         }
