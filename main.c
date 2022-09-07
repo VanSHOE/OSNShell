@@ -57,7 +57,12 @@ char *showPrompt()
 {
     printPrompt();
     char *input = (char *)malloc(2000);
-    fgets(input, 2000, stdin);
+    char *line = fgets(input, 2000, stdin);
+    if (line == NULL)
+    {
+        printf("\n");
+        exit(0);
+    }
     return input;
 }
 
@@ -131,10 +136,18 @@ void childDead()
     // clear output buffer
 }
 
+void dontExit()
+{
+    printf("\n");
+    printPrompt();
+    fflush(stdout);
+}
+
 int main(void)
 {
     signal(SIGCHLD, childDead);
-    int exitFlag = 0;
+    signal(SIGINT, dontExit);
+    exitFlag = 0;
     curbackgroundJobs = 0;
     // set current path as shell home malloc
     shellHome = (char *)malloc(MAX_BUF);
@@ -146,6 +159,7 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
+        // printf("in is: %d", &in);
         lastTime = 0;
         addtoMemDirect(in);
         // add ; after every &

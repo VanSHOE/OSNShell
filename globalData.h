@@ -32,5 +32,5 @@ struct lsLEntry
     char *name;
     char *path;
 };
-
+int exitFlag;
 char *parsePathforHome(char *path);
