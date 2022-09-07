@@ -633,7 +633,7 @@ void ls(char *args[], int argc)
         }
 
         free(lsEntriesF);
-        if (dirCount)
+        if (dirCount && fileCount)
             printf("\n");
 
         for (int i = 0; i < dirCount; i++)
