@@ -80,7 +80,7 @@ void childDead()
                 }
                 else
                 {
-                    printf("\n%s with pid = %d exited ", backgroundJobs[i].name, pid);
+                    printf("\n%s with pid %d exited ", backgroundJobs[i].name, pid);
                     if (WIFEXITED(status))
                     {
 
