@@ -147,6 +147,7 @@ int main(void)
     {
         char *in = showPrompt();
         lastTime = 0;
+        addtoMemDirect(in);
         // add ; after every &
         char *inCopy = (char *)malloc(2000);
         int j = 0;
@@ -165,6 +166,7 @@ int main(void)
         inCopy[j] = '\0';
         strcpy(in, inCopy);
         free(inCopy);
+
         // copy in
         char *input = (char *)malloc(strlen(in) + 1);
         strcpy(input, in);
@@ -220,7 +222,7 @@ int main(void)
                 argArray[j] = strtok(NULL, " \t\n");
             }
 
-            addtoMem(argArray, args);
+            // addtoMem(argArray, args);
 
             if (strcmp(argArray[0], "exit") == 0)
             {

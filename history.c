@@ -25,13 +25,13 @@ void readHistory()
     char *line = (char *)malloc(30 * MAX_BUF);
     int len = read(fd, line, 30 * MAX_BUF);
     line[len] = '\0';
-    char *token = strtok(line, ";");
+    char *token = strtok(line, "\n");
     while (token != NULL)
     {
         curHistHead++;
         curHistTail = 0;
         strcpy(cmdHistory[curHistHead], token);
-        token = strtok(NULL, ";");
+        token = strtok(NULL, "\n");
     }
     close(fd);
 }
@@ -46,7 +46,7 @@ void writeHistory()
     while (1)
     {
         write(fd, cmdHistory[curPtr], strlen(cmdHistory[curPtr]));
-        write(fd, ";", 1);
+        write(fd, "\n", 1);
 
         if (curPtr == curHistHead)
         {
@@ -81,6 +81,27 @@ void addtoMem(char *cmd[], int argc)
     curHistHead = (curHistHead + 1) % historyLen;
 
     strcpy(cmdHistory[curHistHead], temp);
+
+    writeHistory();
+}
+
+void addtoMemDirect(char *command)
+{
+    // remove \n
+    command[strlen(command) - 1] = '\0';
+    if (curHistHead != -1 && strcmp(cmdHistory[curHistHead], command) == 0)
+    {
+        return;
+    }
+
+    if ((curHistHead + 1) % historyLen == curHistTail || curHistTail == -1)
+    {
+        curHistTail = (curHistTail + 1) % historyLen;
+    }
+
+    curHistHead = (curHistHead + 1) % historyLen;
+
+    strcpy(cmdHistory[curHistHead], command);
 
     writeHistory();
 }
