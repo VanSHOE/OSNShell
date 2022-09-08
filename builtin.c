@@ -210,6 +210,7 @@ void discoverRecurse(char *path, int allFile, int allDir, char *name)
         discoverRecurse(newPath, allFile, allDir, name);
         free(newPath);
     }
+    closedir(dir);
 }
 
 void discover(char *args[], int argc)
