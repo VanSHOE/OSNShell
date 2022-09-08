@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 #include <time.h>
 
+int timeCorrect = 0;
+
 void printPrompt()
 {
     char path[MAX_BUF];
@@ -46,9 +48,10 @@ void printPrompt()
     bold();
     printf("%s", newPath);
     reset();
-    if (lastTime >= 1)
+    if (lastTime >= 1 && timeCorrect)
     {
         printf("took %.17gs", (double)lastTime);
+        timeCorrect = 0;
     }
     printf("> ");
 }
@@ -169,6 +172,7 @@ int main(void)
         {
             if (in[i] == '&')
             {
+                inCopy[j++] = ' ';
                 inCopy[j++] = '&';
                 inCopy[j++] = ';';
             }
@@ -179,6 +183,7 @@ int main(void)
         }
         inCopy[j] = '\0';
         strcpy(in, inCopy);
+        // printf("Input: %s\n", in);
         free(inCopy);
 
         // copy in
@@ -292,6 +297,7 @@ int main(void)
                     lastTime = time(NULL);
                     delegate(argArray[0], argArray, 0);
                     lastTime = time(NULL) - lastTime;
+                    timeCorrect = 1;
                 }
             }
             free(argArray);
