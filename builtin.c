@@ -11,13 +11,14 @@
 #include <grp.h>
 #include <time.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 char *parsePathforHome(char *path)
 {
     if (strlen(path) == 0)
         return path;
 
-    char *newPath = (char *)malloc(sizeof(char) * (strlen(path) + strlen(shellHome)));
+    char *newPath = (char *)malloc(sizeof(char) * (strlen(path) + strlen(shellHome) + 1));
 
     if ((strlen(path) == 1 && path[0] == '~') || (path[0] == '~' && path[1] == '/'))
     {
@@ -62,12 +63,42 @@ int lsCmp(const void *a, const void *b)
     // if (strcmp(((struct lsLEntry *)b)->name, "..") == 0 && strcmp(((struct lsLEntry *)a)->name, ".") != 0)
     //     return 1;
 
-    return strcmp((const char *)((struct lsLEntry *)a)->name, (const char *)((struct lsLEntry *)b)->name);
+    // lower case both strings
+    char *aLower = (char *)malloc(strlen(((struct lsLEntry *)a)->name) + 1);
+    char *bLower = (char *)malloc(strlen(((struct lsLEntry *)b)->name) + 1);
+
+    for (int i = 0; i < strlen(((struct lsLEntry *)a)->name); i++)
+        aLower[i] = tolower(((struct lsLEntry *)a)->name[i]);
+    aLower[strlen(((struct lsLEntry *)a)->name)] = '\0';
+
+    for (int i = 0; i < strlen(((struct lsLEntry *)b)->name); i++)
+        bLower[i] = tolower(((struct lsLEntry *)b)->name[i]);
+    bLower[strlen(((struct lsLEntry *)b)->name)] = '\0';
+
+    int ans = strcmp(aLower, bLower);
+    free(aLower);
+    free(bLower);
+    return ans;
 }
 
 int lsStringCmp(const void *a, const void *b)
 {
-    return strcmp((const char *)a, (const char *)b);
+    // lower both
+    char *aLower = (char *)malloc(strlen((char *)a) + 1);
+    char *bLower = (char *)malloc(strlen((char *)b) + 1);
+
+    for (int i = 0; i < strlen((char *)a); i++)
+        aLower[i] = tolower(((char *)a)[i]);
+    aLower[strlen((char *)a)] = '\0';
+
+    for (int i = 0; i < strlen((char *)b); i++)
+        bLower[i] = tolower(((char *)b)[i]);
+    bLower[strlen((char *)b)] = '\0';
+
+    int ans = strcmp(aLower, bLower);
+    free(aLower);
+    free(bLower);
+    return ans;
 }
 
 int isFlag(char *arg)
@@ -606,9 +637,9 @@ void ls(char *args[], int argc)
             struct group *gr = getgrgid(path_stat.st_gid);
 
             // printf("%s %s ", pw->pw_name, gr->gr_name);
-            lsEntriesF[index].owner = (char *)malloc(strlen(pw->pw_name));
+            lsEntriesF[index].owner = (char *)malloc(strlen(pw->pw_name) + 1);
             strcpy(lsEntriesF[index].owner, pw->pw_name);
-            lsEntriesF[index].group = (char *)malloc(strlen(gr->gr_name));
+            lsEntriesF[index].group = (char *)malloc(strlen(gr->gr_name) + 1);
             strcpy(lsEntriesF[index].group, gr->gr_name);
 
             // printf("%ld ", path_stat.st_size);
@@ -618,17 +649,17 @@ void ls(char *args[], int argc)
 
             // printf("Working here");
             // fflush(stdout);
-            lsEntriesF[index].time = (char *)malloc(strlen(time));
+            lsEntriesF[index].time = (char *)malloc(strlen(time) + 1);
             strcpy(lsEntriesF[index].time, time);
             // remove newline
             lsEntriesF[index].time[strlen(time) - 1] = '\0';
 
             // printf("%s\n", entry->d_name);
-            lsEntriesF[index].name = (char *)malloc(strlen(files[index]));
+            lsEntriesF[index].name = (char *)malloc(strlen(files[index]) + 1);
             // printf("Working here");
             // fflush(stdout);
             strcpy(lsEntriesF[index].name, files[index]);
-            lsEntriesF[index].path = (char *)malloc(strlen(files[index]));
+            lsEntriesF[index].path = (char *)malloc(strlen(files[index]) + 1);
             strcpy(lsEntriesF[index].path, files[index]);
         }
         int maxLinksF = 0;
@@ -740,7 +771,7 @@ void ls(char *args[], int argc)
                 // printf("dir here: %s\n", path);
                 strcat(path, entry->d_name);
                 // printf("dir here: %s\n", path);
-                lsEntries[index].path = (char *)malloc(strlen(path));
+                lsEntries[index].path = (char *)malloc(strlen(path) + 1);
                 strcpy(lsEntries[index].path, path);
                 stat(path, &path_stat);
                 total += path_stat.st_blocks;
@@ -828,9 +859,9 @@ void ls(char *args[], int argc)
                 struct group *gr = getgrgid(path_stat.st_gid);
 
                 // printf("%s %s ", pw->pw_name, gr->gr_name);
-                lsEntries[index].owner = (char *)malloc(strlen(pw->pw_name));
+                lsEntries[index].owner = (char *)malloc(strlen(pw->pw_name) + 1);
                 strcpy(lsEntries[index].owner, pw->pw_name);
-                lsEntries[index].group = (char *)malloc(strlen(gr->gr_name));
+                lsEntries[index].group = (char *)malloc(strlen(gr->gr_name) + 1);
                 strcpy(lsEntries[index].group, gr->gr_name);
 
                 // printf("%ld ", path_stat.st_size);
@@ -840,13 +871,13 @@ void ls(char *args[], int argc)
 
                 // printf("Working here");
                 // fflush(stdout);
-                lsEntries[index].time = (char *)malloc(strlen(time));
+                lsEntries[index].time = (char *)malloc(strlen(time) + 1);
                 strcpy(lsEntries[index].time, time);
                 // remove newline
                 lsEntries[index].time[strlen(time) - 1] = '\0';
 
                 // printf("%s\n", entry->d_name);
-                lsEntries[index].name = (char *)malloc(strlen(entry->d_name));
+                lsEntries[index].name = (char *)malloc(strlen(entry->d_name) + 1);
                 // printf("Working here");
                 // fflush(stdout);
                 strcpy(lsEntries[index].name, entry->d_name);
