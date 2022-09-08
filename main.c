@@ -214,6 +214,7 @@ int main(void)
 
         for (int i = 0; i < tokens; i++)
         {
+            timeCorrect = 0;
             char *cmd = cmdArray[i];
             // copy
             char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
