@@ -294,6 +294,7 @@ int main(void)
                 }
                 else
                 {
+                    timeCorrect = 0;
                     lastTime = time(NULL);
                     delegate(argArray[0], argArray, 0);
                     lastTime = time(NULL) - lastTime;
