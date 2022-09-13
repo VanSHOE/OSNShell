@@ -11,6 +11,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <fcntl.h>
 
 int timeCorrect = 0;
 
@@ -158,6 +159,9 @@ int main(void)
 
     readHistory();
     OLDPWD = NULL;
+    // backout stdout and stdin using dup2
+    int stdinCopy = dup(STDIN_FILENO);
+    int stdoutCopy = dup(STDOUT_FILENO);
 
     while (!exitFlag)
     {
@@ -214,11 +218,191 @@ int main(void)
 
         for (int i = 0; i < tokens; i++)
         {
+            // reset stdin and stdout
+            dup2(stdinCopy, STDIN_FILENO);
+            dup2(stdoutCopy, STDOUT_FILENO);
             timeCorrect = 0;
             char *cmd = cmdArray[i];
             // copy
             char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
             strcpy(cmdCopy, cmd);
+            // check for input redir
+            int inputIndex = -1;
+            char *inputRedir = strstr(cmdCopy, "<");
+            if (inputRedir != NULL)
+            {
+                inputIndex = inputRedir - cmdCopy;
+                // remove it
+                cmd[inputIndex] = ' ';
+                cmdCopy[inputIndex] = ' ';
+            }
+            // printf("Formatted command: %s\n", cmd);
+            // get input file
+            char *inputFile = NULL;
+            if (inputIndex != -1)
+            {
+                int skippedFirstSpaces = 0;
+                // inputFile = (char *)malloc(MAX_BUF);
+                int j = 0;
+                for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
+                {
+                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        skippedFirstSpaces = 1;
+                        if (cmdCopy[k] == ' ')
+                        {
+                            break;
+                        }
+                        else
+                        {
+
+                            j++;
+                        }
+                    }
+                }
+                inputFile = (char *)malloc(j + 1);
+                skippedFirstSpaces = 0;
+                j = 0;
+                for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
+                {
+                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        skippedFirstSpaces = 1;
+                        if (cmdCopy[k] == ' ')
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            inputFile[j++] = cmdCopy[k];
+                            // remove name from cmd
+                            cmd[k] = ' ';
+                            cmdCopy[k] = ' ';
+                        }
+                    }
+                }
+                inputFile[j] = '\0';
+                // check if file exists
+                FILE *fp = fopen(inputFile, "r");
+                if (fp == NULL)
+                {
+                    printf("File %s does not exist\n", inputFile);
+                    printPrompt();
+                    fflush(stdout);
+                }
+                else
+                {
+                    dup2(fileno(fp), STDIN_FILENO);
+                }
+            }
+
+            // check for output redir
+            int outputIndex = -1;
+            int isAppend = 0;
+            char *outputRedir = strstr(cmdCopy, ">");
+
+            if (outputRedir != NULL)
+            {
+                outputIndex = outputRedir - cmdCopy;
+                // check for append
+
+                // remove it
+                cmd[outputIndex] = ' ';
+                cmdCopy[outputIndex] = ' ';
+                if (outputIndex + 1 < strlen(cmdCopy) && cmdCopy[outputIndex + 1] == '>')
+                {
+                    isAppend = 1;
+                    outputIndex++;
+                    cmd[outputIndex] = ' ';
+                    cmdCopy[outputIndex] = ' ';
+                }
+            }
+            // get output file
+            char *outputFile = NULL;
+            if (outputIndex != -1)
+            {
+                int skippedFirstSpaces = 0;
+                // outputFile = (char *)malloc(MAX_BUF);
+                int j = 0;
+                for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
+                {
+                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        skippedFirstSpaces = 1;
+                        if (cmdCopy[k] == ' ')
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            j++;
+                        }
+                    }
+                }
+                outputFile = (char *)malloc(j + 1);
+                skippedFirstSpaces = 0;
+                j = 0;
+                for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
+                {
+                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        skippedFirstSpaces = 1;
+                        if (cmdCopy[k] == ' ')
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            outputFile[j++] = cmdCopy[k];
+                            // remove name from cmd
+                            cmd[k] = ' ';
+                            cmdCopy[k] = ' ';
+                        }
+                    }
+                }
+                outputFile[j] = '\0';
+
+                // if file doesnt exist create using open
+                int outputFd; // = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+                if (isAppend)
+                {
+                    outputFd = open(outputFile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                }
+                else
+                {
+                    outputFd = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                }
+
+                if (outputFd == -1)
+                {
+                    printf("Error opening file %s\n", outputFile);
+                    printPrompt();
+                    fflush(stdout);
+                }
+                else
+                {
+                    dup2(outputFd, STDOUT_FILENO);
+                }
+            }
+
+            // printf("Command: %s | Copy: %s\n", cmd, cmdCopy);
             // count arguments
             int args = 0;
             char *arg = strtok(cmdCopy, " \t\n");
@@ -241,8 +425,6 @@ int main(void)
             {
                 argArray[j] = strtok(NULL, " \t\n");
             }
-
-            // addtoMem(argArray, args);
 
             if (strcmp(argArray[0], "exit") == 0)
             {
@@ -303,6 +485,8 @@ int main(void)
                 }
             }
             free(argArray);
+            dup2(stdinCopy, STDIN_FILENO);
+            dup2(stdoutCopy, STDOUT_FILENO);
         }
 
         free(cmdArray);
