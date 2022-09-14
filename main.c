@@ -251,8 +251,8 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
-        printf("Input before copy: %s\n", in);
-        printf("in is: %s", in);
+        // printf("Input before copy: %s\n", in);
+        // printf("in is: %s", in);
         lastTime = 0;
         addtoMemDirect(in);
         // add ; after every &
@@ -274,7 +274,7 @@ int main(void)
         }
         inCopy[j] = '\0';
         strcpy(in, inCopy);
-        printf("Input after copy: %s\n", in);
+        // printf("Input after copy: %s\n", in);
         free(inCopy);
 
         // copy in
@@ -382,8 +382,9 @@ int main(void)
                 if (fp == NULL)
                 {
                     printf("File %s does not exist\n", inputFile);
-                    printPrompt();
-                    fflush(stdout);
+                    // printPrompt();
+                    // fflush(stdout);
+                    continue;
                 }
                 else
                 {
