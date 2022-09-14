@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <fcntl.h>
+#include <termios.h>
+#include <ctype.h>
 
 int timeCorrect = 0;
 
@@ -56,18 +58,101 @@ void printPrompt()
     }
     printf("> ");
 }
+void die(const char *s)
+{
+    perror(s);
+    exit(1);
+}
+
+struct termios orig_termios;
+
+void disableRawMode()
+{
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+        die("tcsetattr");
+}
+
+void enableRawMode()
+{
+    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+        die("tcgetattr");
+    atexit(disableRawMode);
+    struct termios raw = orig_termios;
+    raw.c_lflag &= ~(ICANON | ECHO);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
+        die("tcsetattr");
+}
 
 char *showPrompt()
 {
-    printPrompt();
-    char *input = (char *)malloc(2000);
-    char *line = fgets(input, 2000, stdin);
-    if (line == NULL)
+    char *inp = malloc(sizeof(char) * MAX_BUF);
+    char c;
+    while (1)
     {
+        setbuf(stdout, NULL);
+        enableRawMode();
+        printPrompt();
+        memset(inp, '\0', MAX_BUF);
+        int pt = 0;
+        while (read(STDIN_FILENO, &c, 1) == 1)
+        {
+            if (iscntrl(c))
+            {
+                if (c == 10)
+                    break;
+                // else if (c == 27)
+                // {
+                //     char buf[3];
+                //     buf[2] = 0;
+                //     if (read(STDIN_FILENO, buf, 2) == 2)
+                //     { // length of escape code
+                //       printf("\rarrow key: %s", buf);
+                //     }
+                // }
+                else if (c == 127)
+                { // backspace
+                    if (pt > 0)
+                    {
+                        if (inp[pt - 1] == 9)
+                        {
+                            for (int i = 0; i < 7; i++)
+                            {
+                                printf("\b");
+                            }
+                        }
+                        inp[--pt] = '\0';
+                        printf("\b \b");
+                    }
+                }
+                else if (c == 9)
+                { // TAB character
+                    inp[pt++] = c;
+                    for (int i = 0; i < 8; i++)
+                    { // TABS should be 8 spaces
+                        printf("n");
+                    }
+                }
+                else if (c == 4)
+                {
+                    exit(0);
+                }
+                else
+                {
+                    printf("%d\n", c);
+                }
+            }
+            else
+            {
+                inp[pt++] = c;
+                printf("%c", c);
+            }
+        }
+        disableRawMode();
+
+        // printf("\nInput Read: [%s]\n", inp);
         printf("\n");
-        exit(0);
+        return inp;
     }
-    return input;
 }
 
 void childDead()
@@ -150,7 +235,7 @@ void dontExit()
 int main(void)
 {
     signal(SIGCHLD, childDead);
-    signal(SIGINT, dontExit);
+    // signal(SIGINT, dontExit);
     exitFlag = 0;
     curbackgroundJobs = 0;
     // set current path as shell home malloc
@@ -166,10 +251,12 @@ int main(void)
     while (!exitFlag)
     {
         char *in = showPrompt();
-        // printf("in is: %d", &in);
+        printf("Input before copy: %s\n", in);
+        printf("in is: %s", in);
         lastTime = 0;
         addtoMemDirect(in);
         // add ; after every &
+
         char *inCopy = (char *)malloc(2000);
         int j = 0;
         for (int i = 0; i < strlen(in); i++)
@@ -187,7 +274,7 @@ int main(void)
         }
         inCopy[j] = '\0';
         strcpy(in, inCopy);
-        // printf("Input: %s\n", in);
+        printf("Input after copy: %s\n", in);
         free(inCopy);
 
         // copy in

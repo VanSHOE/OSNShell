@@ -88,7 +88,11 @@ void addtoMem(char *cmd[], int argc)
 void addtoMemDirect(char *command)
 {
     // remove \n
-    command[strlen(command) - 1] = '\0';
+    if (command[strlen(command) - 1] == '\n')
+    {
+        command[strlen(command) - 1] = '\0';
+    }
+
     if (curHistHead != -1 && strcmp(cmdHistory[curHistHead], command) == 0)
     {
         return;
