@@ -188,6 +188,17 @@ char *showPrompt()
 
                         continue;
                     }
+                    // print filtered list
+                    printf("\n");
+                    for (int i = 0; i < filteredListSize; i++)
+                    {
+                        printf("%s\n", filteredList[i]);
+                    }
+                    printPrompt();
+                    for (int i = 0; i < pt; i++)
+                    {
+                        printf("%c", inp[i]);
+                    }
 
                     char *prefix = (char *)malloc(sizeof(char) * strlen(filteredList[0]));
                     strcpy(prefix, filteredList[0]);
@@ -197,7 +208,8 @@ char *showPrompt()
                         free(prefix);
                         prefix = newPrefix;
                     }
-
+                    // printf("This ran");
+                    // fflush(stdout);
                     if (strlen(prefix) > strlen(curPrefix))
                     {
                         for (int i = lastSpace; i < pt; i++)
