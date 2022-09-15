@@ -214,6 +214,7 @@ char *showPrompt()
                         printf("%s\n", filteredList[i]);
                     }
                     printPrompt();
+                    // printf("New Prompt");
                     for (int i = 0; i < pt; i++)
                     {
                         printf("%c", inp[i]);
@@ -246,14 +247,7 @@ char *showPrompt()
                             printf("%c", prefix[i]);
                         }
                     }
-                    else
-                    {
-                        printf("\n");
-                        for (int i = 0; i < filteredListSize; i++)
-                        {
-                            printf("%s\n", filteredList[i]);
-                        }
-                    }
+                    free(prefix);
                     // printf("This ran\n");
                     fflush(stdout);
                     i = 0;
