@@ -138,17 +138,10 @@ char *showPrompt()
                 }
                 else if (c == 9)
                 { // TAB character
+                    // continue;
                     char **fileList = getFileList(".");
                     if (fileList == NULL)
                     {
-                        int i = 0;
-                        // free filelist
-                        while (fileList[i] != NULL)
-                        {
-                            free(fileList[i]);
-                            i++;
-                        }
-                        free(fileList);
                         continue;
                     }
                     // search for last space else 0
@@ -261,17 +254,17 @@ char *showPrompt()
                             printf("%s\n", filteredList[i]);
                         }
                     }
-                    printf("This ran\n");
+                    // printf("This ran\n");
                     fflush(stdout);
                     i = 0;
                     while (fileList[i] != NULL)
                     {
-                        printf("This ran: %s at addr: %d\n", fileList[i], (int)fileList[i]);
+                        // printf("This ran: %s at addr: %d\n", fileList[i], (int)fileList[i]);
                         fflush(stdout);
                         free(fileList[i]); // WHY IS THIS CAUSING A CRASH????????????
                         i++;
                     }
-                    printf("This ran2\n");
+                    // printf("This ran2\n");
                     fflush(stdout);
                     free(fileList);
                     free(curPrefix);

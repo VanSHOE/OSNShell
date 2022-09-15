@@ -1046,7 +1046,7 @@ char **getFileList(char *dir)
             count++;
         }
         closedir(d);
-        char **files = (char **)malloc(count * sizeof(char *));
+        char **files = (char **)malloc((count + 1) * sizeof(char *));
         d = opendir(dir);
         int index = 0;
         while ((dirEntry = readdir(d)) != NULL)
