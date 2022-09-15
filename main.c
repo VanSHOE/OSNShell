@@ -197,6 +197,37 @@ char *showPrompt()
                         free(prefix);
                         prefix = newPrefix;
                     }
+
+                    if (strlen(prefix) > strlen(curPrefix))
+                    {
+                        for (int i = lastSpace; i < pt; i++)
+                        {
+                            printf("\b \b");
+                        }
+                        for (int i = lastSpace; i < pt; i++)
+                        {
+                            inp[i] = '\0';
+                        }
+                        pt = lastSpace;
+                        for (int i = 0; i < strlen(prefix); i++)
+                        {
+                            inp[pt++] = prefix[i];
+                            printf("%c", prefix[i]);
+                        }
+                    }
+                    else
+                    {
+                        printf("\n");
+                        for (int i = 0; i < filteredListSize; i++)
+                        {
+                            printf("%s\n", filteredList[i]);
+
+                            free(filteredList[i]);
+
+                            if (i == filteredListSize - 1)
+                                free(filteredList);
+                        }
+                    }
                 }
                 else if (c == 4)
                 {
