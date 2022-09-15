@@ -1032,3 +1032,36 @@ void pinfo(int pid)
     }
     printf("\nmemory : %lu\nexecutable Path : %s\n", mem, newPath);
 }
+
+char **getFileList(char *dir)
+{
+    DIR *d;
+    struct dirent *dirEntry;
+    d = opendir(dir);
+    if (d)
+    {
+        int count = 0;
+        while ((dirEntry = readdir(d)) != NULL)
+        {
+            count++;
+        }
+        closedir(d);
+        char **files = (char **)malloc(count * sizeof(char *));
+        d = opendir(dir);
+        int index = 0;
+        while ((dirEntry = readdir(d)) != NULL)
+        {
+            files[index] = (char *)malloc(strlen(dirEntry->d_name) + 1);
+            strcpy(files[index], dirEntry->d_name);
+            index++;
+        }
+        // add null terminator
+        files[index] = NULL;
+        closedir(d);
+        return files;
+    }
+    else
+    {
+        return NULL;
+    }
+}

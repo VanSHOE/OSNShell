@@ -15,6 +15,18 @@
 #include <termios.h>
 #include <ctype.h>
 
+char *commonPrefix(char *str1, char *str2)
+{
+    // find the longest prefix common to both strings
+    int i = 0;
+    while (str1[i] && str2[i] && str1[i] == str2[i])
+        i++;
+    char *prefix = (char *)malloc(sizeof(char) * (i + 1));
+    strncpy(prefix, str1, i);
+    prefix[i] = '\0';
+    return prefix;
+}
+
 int timeCorrect = 0;
 
 void printPrompt()
@@ -126,10 +138,64 @@ char *showPrompt()
                 }
                 else if (c == 9)
                 { // TAB character
-                    inp[pt++] = c;
-                    for (int i = 0; i < 8; i++)
-                    { // TABS should be 8 spaces
-                        printf("n");
+                    char **fileList = getFileList(".");
+                    if (fileList == NULL)
+                        continue;
+
+                    // search for last space else 0
+                    int lastSpace = 0;
+                    for (int i = 0; i < pt; i++)
+                    {
+                        if (inp[i] == ' ')
+                            lastSpace = i + 1;
+                    }
+
+                    int i = 0;
+                    char *curPrefix = (char *)malloc(sizeof(char) * (strlen(inp) - lastSpace + 1));
+                    strcpy(curPrefix, inp + lastSpace);
+                    char **filteredList = (char **)malloc(sizeof(char *) * MAX_BUF);
+                    int filteredListSize = 0;
+                    while (fileList[i] != NULL)
+                    {
+                        if (strstr(fileList[i], curPrefix) == fileList[i])
+                        {
+                            filteredList[filteredListSize++] = fileList[i];
+                        }
+                        i++;
+                    }
+
+                    if (!filteredListSize)
+                    {
+                        continue;
+                    }
+                    else if (filteredListSize == 1)
+                    {
+                        // only one file, directly put it in input
+                        for (int i = lastSpace; i < pt; i++)
+                        {
+                            printf("\b \b");
+                        }
+                        for (int i = lastSpace; i < pt; i++)
+                        {
+                            inp[i] = '\0';
+                        }
+                        pt = lastSpace;
+                        for (int i = 0; i < strlen(filteredList[0]); i++)
+                        {
+                            inp[pt++] = filteredList[0][i];
+                            printf("%c", filteredList[0][i]);
+                        }
+
+                        continue;
+                    }
+
+                    char *prefix = (char *)malloc(sizeof(char) * strlen(filteredList[0]));
+                    strcpy(prefix, filteredList[0]);
+                    for (int i = 1; i < filteredListSize; i++)
+                    {
+                        char *newPrefix = commonPrefix(prefix, filteredList[i]);
+                        free(prefix);
+                        prefix = newPrefix;
                     }
                 }
                 else if (c == 4)
@@ -235,7 +301,7 @@ void dontExit()
 int main(void)
 {
     signal(SIGCHLD, childDead);
-    // signal(SIGINT, dontExit);
+    signal(SIGINT, dontExit);
     exitFlag = 0;
     curbackgroundJobs = 0;
     // set current path as shell home malloc
