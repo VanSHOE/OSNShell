@@ -1126,3 +1126,26 @@ void jobs(char *args[], int argc)
         printf("[%d] %s %s [%d]\n", i + 1, running, backgroundJobs[i].cmd, backgroundJobs[i].pid);
     }
 }
+
+void sendSignal(char *args[], int argc)
+{
+    if (argc != 3)
+    {
+        printf("Invalid number of arguments.\nArguments must be exactly 3 in the format sig <signal> <job-number>.\n");
+        return;
+    }
+
+    int signal = atoi(args[1]);
+    int jobNumber = atoi(args[2]);
+
+    if (jobNumber > curbackgroundJobs || jobNumber < 1)
+    {
+        printf("Invalid job number.\n");
+        return;
+    }
+
+    if (kill(backgroundJobs[jobNumber - 1].pid, signal) == -1)
+    {
+        printf("Error sending signal.\n");
+    }
+}
