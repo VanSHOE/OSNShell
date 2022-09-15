@@ -345,6 +345,16 @@ void childDead()
                     }
                 }
 
+                // free
+                if (backgroundJobs[i].name != NULL)
+                {
+                    free(backgroundJobs[i].name);
+                }
+                if (backgroundJobs[i].cmd != NULL)
+                {
+                    free(backgroundJobs[i].cmd);
+                }
+
                 for (int j = i; j < curbackgroundJobs; j++)
                 {
                     backgroundJobs[j] = backgroundJobs[j + 1];
@@ -654,6 +664,10 @@ int main(void)
             else if (strcmp(argArray[0], "pwd") == 0)
             {
                 pwd();
+            }
+            else if (strcmp(argArray[0], "jobs") == 0)
+            {
+                jobs(argArray, args);
             }
             else if (strcmp(argArray[0], "echo") == 0)
             {

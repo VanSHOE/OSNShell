@@ -12,6 +12,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <signal.h>
 
 char *parsePathforHome(char *path)
 {
@@ -1063,5 +1064,65 @@ char **getFileList(char *dir)
     else
     {
         return NULL;
+    }
+}
+
+void jobs(char *args[], int argc)
+{
+    int showRunning = 0;
+    int showStopped = 0;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(args[i], "-r") == 0)
+        {
+            showRunning = 1;
+        }
+        else if (strcmp(args[i], "-s") == 0)
+        {
+            showStopped = 1;
+        }
+        else if (strcmp(args[i], "-rs") == 0 || strcmp(args[i], "-sr") == 0)
+        {
+            showRunning = 1;
+            showStopped = 1;
+        }
+        else
+        {
+            printf("Invalid argument %s\n", args[i]);
+            return;
+        }
+    }
+
+    for (int i = 0; i < curbackgroundJobs; i++)
+    {
+        // get stat file
+        char statPath[100];
+        sprintf(statPath, "/proc/%d/stat", backgroundJobs[i].pid);
+        FILE *stat = fopen(statPath, "r");
+        if (stat == NULL || kill(backgroundJobs[i].pid, 0) == -1)
+        {
+            continue;
+        }
+        char state;
+        fscanf(stat, "%*d %*s %c", &state);
+        fclose(stat);
+
+        if (showRunning && state == 'T' || showStopped && state != 'T')
+        {
+            continue;
+        }
+
+        char running[10];
+        if (state == 'T')
+        {
+            strcpy(running, "Stopped");
+        }
+        else
+        {
+            strcpy(running, "Running");
+        }
+
+        printf("[%d] %s %s [%d]\n", i + 1, running, backgroundJobs[i].cmd, backgroundJobs[i].pid);
     }
 }

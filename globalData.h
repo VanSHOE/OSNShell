@@ -13,6 +13,7 @@ struct job
 {
     int pid;
     char *name;
+    char *cmd;
 };
 
 struct job backgroundJobs[10000];

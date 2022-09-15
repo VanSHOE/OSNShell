@@ -43,6 +43,17 @@ void delegate(char *command, char *args[], int background)
             backgroundJobs[curbackgroundJobs].pid = pid;
             backgroundJobs[curbackgroundJobs].name = (char *)malloc(strlen(command) + 1);
             strcpy(backgroundJobs[curbackgroundJobs].name, command);
+
+            // copy full command with args
+            char *fullCmd = (char *)malloc(MAX_BUF);
+            strcpy(fullCmd, command);
+            for (int i = 1; args[i] != NULL; i++)
+            {
+                strcat(fullCmd, " ");
+                strcat(fullCmd, args[i]);
+            }
+            backgroundJobs[curbackgroundJobs].cmd = fullCmd;
+
             printf("[%d] %d\n", ++curbackgroundJobs, pid);
         }
     }
