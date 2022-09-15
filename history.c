@@ -17,7 +17,12 @@ void readHistory()
         cmdHistory[i] = (char *)malloc(MAX_BUF);
     }
 
-    int fd = open("history.txt", O_RDONLY);
+    char *pathForHistory = (char *)malloc(MAX_BUF);
+    strcpy(pathForHistory, shellHome);
+    strcat(pathForHistory, "/.history");
+
+    int fd = open(pathForHistory, O_RDONLY);
+    free(pathForHistory);
     if (fd == -1)
     {
         return;
@@ -38,7 +43,11 @@ void readHistory()
 
 void writeHistory()
 {
-    int fd = open("history.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    char *pathForHistory = (char *)malloc(MAX_BUF);
+    strcpy(pathForHistory, shellHome);
+    strcat(pathForHistory, "/.history");
+    int fd = open(pathForHistory, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    free(pathForHistory);
     int curPtr = curHistTail;
     // printf("curHistHead: %d, curHistTail: %d", curHistHead, curHistTail);
     // // clear stdio buffer
