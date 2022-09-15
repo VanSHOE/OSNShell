@@ -140,8 +140,17 @@ char *showPrompt()
                 { // TAB character
                     char **fileList = getFileList(".");
                     if (fileList == NULL)
+                    {
+                        int i = 0;
+                        // free filelist
+                        while (fileList[i] != NULL)
+                        {
+                            free(fileList[i]);
+                            i++;
+                        }
+                        free(fileList);
                         continue;
-
+                    }
                     // search for last space else 0
                     int lastSpace = 0;
                     for (int i = 0; i < pt; i++)
@@ -166,6 +175,15 @@ char *showPrompt()
 
                     if (!filteredListSize)
                     {
+                        i = 0;
+                        while (fileList[i] != NULL)
+                        {
+                            free(fileList[i]);
+                            i++;
+                        }
+                        free(fileList);
+                        free(curPrefix);
+                        free(filteredList);
                         continue;
                     }
                     else if (filteredListSize == 1)
@@ -185,7 +203,15 @@ char *showPrompt()
                             inp[pt++] = filteredList[0][i];
                             printf("%c", filteredList[0][i]);
                         }
-
+                        i = 0;
+                        while (fileList[i] != NULL)
+                        {
+                            free(fileList[i]);
+                            i++;
+                        }
+                        free(fileList);
+                        free(curPrefix);
+                        free(filteredList);
                         continue;
                     }
                     // print filtered list
@@ -233,13 +259,23 @@ char *showPrompt()
                         for (int i = 0; i < filteredListSize; i++)
                         {
                             printf("%s\n", filteredList[i]);
-
-                            free(filteredList[i]);
-
-                            if (i == filteredListSize - 1)
-                                free(filteredList);
                         }
                     }
+                    printf("This ran\n");
+                    fflush(stdout);
+                    i = 0;
+                    while (fileList[i] != NULL)
+                    {
+                        printf("This ran: %s at addr: %d\n", fileList[i], (int)fileList[i]);
+                        fflush(stdout);
+                        free(fileList[i]); // WHY IS THIS CAUSING A CRASH????????????
+                        i++;
+                    }
+                    printf("This ran2\n");
+                    fflush(stdout);
+                    free(fileList);
+                    free(curPrefix);
+                    free(filteredList);
                 }
                 else if (c == 4)
                 {
