@@ -380,14 +380,14 @@ int main(void)
 
     ctrlC.sa_handler = dontExit;
     sigemptyset(&ctrlC.sa_mask);
-    ctrlC.sa_flags = SA_RESTART | SA_SIGINFO;
+    ctrlC.sa_flags = SA_RESTART;
 
     sigaction(SIGINT, &ctrlC, NULL);
 
     struct sigaction child;
     child.sa_handler = childDead;
     sigemptyset(&child.sa_mask);
-    child.sa_flags = SA_RESTART | SA_SIGINFO;
+    child.sa_flags = SA_RESTART;
 
     sigaction(SIGCHLD, &child, NULL);
 
@@ -691,9 +691,17 @@ int main(void)
             {
                 cd(argArray, args);
             }
+            else if (strcmp(argArray[0], "sig") == 0)
+            {
+                sendSignal(argArray, args);
+            }
             else if (strcmp(argArray[0], "ls") == 0)
             {
                 ls(argArray, args);
+            }
+            else if (strcmp(argArray[0], "bg") == 0)
+            {
+                resumeBG(argArray, args);
             }
             else if (strcmp(argArray[0], "history") == 0)
             {

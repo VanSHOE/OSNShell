@@ -1131,12 +1131,12 @@ void sendSignal(char *args[], int argc)
 {
     if (argc != 3)
     {
-        printf("Invalid number of arguments.\nArguments must be exactly 3 in the format sig <signal> <job-number>.\n");
+        printf("Invalid number of arguments.\nArguments must be exactly 3 in the format sig <job-number> <signal>.\n");
         return;
     }
 
-    int signal = atoi(args[1]);
-    int jobNumber = atoi(args[2]);
+    int jobNumber = atoi(args[1]);
+    int signal = atoi(args[2]);
 
     if (jobNumber > curbackgroundJobs || jobNumber < 1)
     {
@@ -1145,6 +1145,28 @@ void sendSignal(char *args[], int argc)
     }
 
     if (kill(backgroundJobs[jobNumber - 1].pid, signal) == -1)
+    {
+        printf("Error sending signal.\n");
+    }
+}
+
+void resumeBG(char *args[], int argc)
+{
+    if (argc != 2)
+    {
+        printf("Invalid number of arguments.\nArguments must be exactly 2 in the format bg <job-number>.\n");
+        return;
+    }
+
+    int jobNumber = atoi(args[1]);
+
+    if (jobNumber > curbackgroundJobs || jobNumber < 1)
+    {
+        printf("Invalid job number.\n");
+        return;
+    }
+
+    if (kill(backgroundJobs[jobNumber - 1].pid, SIGCONT) == -1)
     {
         printf("Error sending signal.\n");
     }
