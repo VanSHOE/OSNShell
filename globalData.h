@@ -35,3 +35,4 @@ struct lsLEntry
 };
 int exitFlag;
 char *parsePathforHome(char *path);
+char *reverseParsePath(char *path);

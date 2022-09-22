@@ -376,8 +376,21 @@ void dontExit()
 
 int main(void)
 {
-    signal(SIGCHLD, childDead);
-    signal(SIGINT, dontExit);
+    struct sigaction ctrlC;
+
+    ctrlC.sa_handler = dontExit;
+    sigemptyset(&ctrlC.sa_mask);
+    ctrlC.sa_flags = SA_RESTART | SA_SIGINFO;
+
+    sigaction(SIGINT, &ctrlC, NULL);
+
+    struct sigaction child;
+    child.sa_handler = childDead;
+    sigemptyset(&child.sa_mask);
+    child.sa_flags = SA_RESTART | SA_SIGINFO;
+
+    sigaction(SIGCHLD, &child, NULL);
+
     exitFlag = 0;
     curbackgroundJobs = 0;
     // set current path as shell home malloc
@@ -392,6 +405,7 @@ int main(void)
 
     while (!exitFlag)
     {
+        // printf("no");
         char *in = showPrompt();
         // printf("Input before copy: %s\n", in);
         // printf("in is: %s", in);
