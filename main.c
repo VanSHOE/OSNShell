@@ -9,6 +9,7 @@
 #include "globalData.h"
 #include <signal.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <fcntl.h>
@@ -198,6 +199,22 @@ char *showPrompt()
                         {
                             inp[pt++] = filteredList[0][i];
                             printf("%c", filteredList[0][i]);
+                        }
+
+                        // check if its a file or dir
+                        struct stat st;
+                        char *path = (char *)malloc(sizeof(char) * (strlen(filteredList[0]) + 2));
+                        strcpy(path, filteredList[0]);
+                        strcat(path, "/");
+                        if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+                        {
+                            inp[pt++] = '/';
+                            printf("/");
+                        }
+                        else
+                        {
+                            inp[pt++] = ' ';
+                            printf(" ");
                         }
                         i = 0;
                         while (fileList[i] != NULL)
