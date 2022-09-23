@@ -498,8 +498,8 @@ int main(void)
 
             for (int ii = 0; ii < pipedCommands; ii++)
             {
-                dup2(stdinCopy, STDIN_FILENO);
-                dup2(stdoutCopy, STDOUT_FILENO);
+                // dup2(stdinCopy, STDIN_FILENO);
+                // dup2(stdoutCopy, STDOUT_FILENO);
 
                 timeCorrect = 0;
                 char *cmd = pipedCommandArray[ii];
@@ -710,42 +710,43 @@ int main(void)
                 int procId = -2;
                 if (pipedCommands != 1)
                 {
+                    procId = fork();
+
+                    if (procId == 0)
+                    {
+                        int pipeIndex = ii - 1;
+                        if (pipeIndex >= 0)
+                        {
+                            printf("Input ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
+                            dup2(pipefd[pipeIndex][0], STDIN_FILENO);
+                        }
+                        else
+                        {
+                            dup2(stdinCopy, STDIN_FILENO);
+                        }
+                        if (pipeIndex + 1 < pipesRequired)
+                        {
+                            printf("Output ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
+                            dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
+                        }
+                        else
+                        {
+
+                            dup2(stdoutCopy, STDOUT_FILENO);
+                        }
+
+                        // close all
+                        for (int j = 0; j < pipesRequired; j++)
+                        {
+                            close(pipefd[j][0]);
+                            close(pipefd[j][1]);
+                        }
+                    }
                     // print command
                     // printf("Command: %s\n", argArray[0]);
                     // dup pipes
 
                     // execute command
-                    procId = fork();
-                    int pipeIndex = ii - 1;
-                    if (pipeIndex >= 0)
-                    {
-                        dup2(pipefd[pipeIndex][0], STDIN_FILENO);
-                    }
-                    else
-                    {
-                        dup2(stdinCopy, STDIN_FILENO);
-                    }
-                    if (pipeIndex + 1 < pipesRequired)
-                    {
-                        dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
-                    }
-                    else
-                    {
-                        dup2(stdoutCopy, STDOUT_FILENO);
-                    }
-
-                    // close all but above
-                    for (int j = 0; j < pipesRequired; j++)
-                    {
-                        if (j != pipeIndex)
-                        {
-                            close(pipefd[j][0]);
-                        }
-                        if (j != pipeIndex + 1)
-                        {
-                            close(pipefd[j][1]);
-                        }
-                    }
                     pids[ii] = procId;
                 }
 
@@ -779,8 +780,8 @@ int main(void)
                     exit(0);
                 }
                 free(argArray);
-                dup2(stdinCopy, STDIN_FILENO);
-                dup2(stdoutCopy, STDOUT_FILENO);
+                // dup2(stdinCopy, STDIN_FILENO);
+                // dup2(stdoutCopy, STDOUT_FILENO);
             }
             // wait for all pids
             // close pipes
