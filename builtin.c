@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <grp.h>
@@ -49,6 +50,10 @@ int callInbuilt(char *argArray[], int args)
     else if (strcmp(argArray[0], "bg") == 0)
     {
         resumeBG(argArray, args);
+    }
+    else if (strcmp(argArray[0], "fg") == 0)
+    {
+        bringFG(argArray, args);
     }
     else if (strcmp(argArray[0], "history") == 0)
     {
@@ -1233,4 +1238,42 @@ void resumeBG(char *args[], int argc)
     {
         printf("Error sending signal.\n");
     }
+}
+
+void bringFG(char *args[], int argc)
+{
+    if (argc != 2)
+    {
+        printf("Invalid number of arguments.\nArguments must be exactly 2 in the format fg <job-number>.\n");
+        return;
+    }
+
+    int jobNumber = atoi(args[1]);
+
+    if (jobNumber > curbackgroundJobs || jobNumber < 1)
+    {
+        printf("Invalid job number.\n");
+        return;
+    }
+
+    int jobIdx = jobNumber - 1;
+    // bring to foreground
+
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
+    tcsetpgrp(STDIN_FILENO, getpgid(backgroundJobs[jobIdx].pid));
+    tcsetpgrp(STDOUT_FILENO, getpgid(backgroundJobs[jobIdx].pid));
+
+    if (kill(backgroundJobs[jobIdx].pid, SIGCONT) == -1)
+    {
+        printf("Error sending signal.\n");
+    }
+    waitpid(backgroundJobs[jobIdx].pid, NULL, WUNTRACED);
+    tcsetpgrp(STDIN_FILENO, getpgrp());
+    tcsetpgrp(STDOUT_FILENO, getpgrp());
+
+    signal(SIGTTOU, SIG_DFL);
+    signal(SIGTTIN, SIG_DFL);
+
+    printf("Fg over\n");
 }

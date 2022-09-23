@@ -25,6 +25,7 @@ void delegate(char *command, char *args[], int background)
     }
     else
     {
+        // setpgid(pid, pid);
         if (background == 0)
         {
             int status;

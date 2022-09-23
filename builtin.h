@@ -8,3 +8,4 @@ char **getFileList(char *dir);
 void jobs(char *args[], int argc);
 void sendSignal(char *args[], int argc);
 void resumeBG(char *args[], int argc);
+void bringFG(char *args[], int argc);
