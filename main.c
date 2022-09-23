@@ -704,6 +704,10 @@ int main(void)
                     argArray[j] = strtok(NULL, " \t\n");
                 }
 
+                if (pipedCommands != 1)
+                {
+                    // dup pipes
+                                }
                 int isInbuilt = callInbuilt(argArray, args);
 
                 if (!isInbuilt)
