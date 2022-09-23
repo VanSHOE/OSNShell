@@ -524,6 +524,7 @@ int main(void)
                 // printf("Formatted command: %s\n", cmd);
                 // get input file
                 char *inputFile = NULL;
+                int inputRedirFlag = 0;
                 if (inputIndex != -1)
                 {
                     int skippedFirstSpaces = 0;
@@ -587,6 +588,7 @@ int main(void)
                     else
                     {
                         dup2(fileno(fp), STDIN_FILENO);
+                        inputRedirFlag = 1;
                     }
                 }
 
@@ -594,6 +596,7 @@ int main(void)
                 int outputIndex = -1;
                 int isAppend = 0;
                 char *outputRedir = strstr(cmdCopy, ">");
+                int outputRedirFlag = 0;
 
                 if (outputRedir != NULL)
                 {
@@ -685,6 +688,7 @@ int main(void)
                     else
                     {
                         dup2(outputFd, STDOUT_FILENO);
+                        outputRedirFlag = 1;
                     }
                 }
 
@@ -720,23 +724,30 @@ int main(void)
                     if (procId == 0)
                     {
                         int pipeIndex = ii - 1;
-                        if (pipeIndex >= 0)
+                        if (!inputRedirFlag)
                         {
-                            // printf("Input ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
-                            dup2(pipefd[pipeIndex][0], STDIN_FILENO);
+                            if (pipeIndex >= 0)
+                            {
+                                // printf("Input ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
+                                dup2(pipefd[pipeIndex][0], STDIN_FILENO);
+                            }
+                            else
+                            {
+                                dup2(stdinCopy, STDIN_FILENO);
+                            }
                         }
-                        else
+
+                        if (!outputRedirFlag)
                         {
-                            dup2(stdinCopy, STDIN_FILENO);
-                        }
-                        if (pipeIndex + 1 < pipesRequired)
-                        {
-                            // printf("Output ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex + 1);
-                            dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
-                        }
-                        else
-                        {
-                            dup2(stdoutCopy, STDOUT_FILENO);
+                            if (pipeIndex + 1 < pipesRequired)
+                            {
+                                // printf("Output ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex + 1);
+                                dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
+                            }
+                            else
+                            {
+                                dup2(stdoutCopy, STDOUT_FILENO);
+                            }
                         }
                         // close all
                         for (int j = 0; j < pipesRequired; j++)
