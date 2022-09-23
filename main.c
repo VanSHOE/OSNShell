@@ -462,8 +462,8 @@ int main(void)
         for (int i = 0; i < tokens; i++)
         {
             // reset stdin and stdout
-            dup2(stdinCopy, STDIN_FILENO);
-            dup2(stdoutCopy, STDOUT_FILENO);
+            // dup2(stdinCopy, STDIN_FILENO);
+            // dup2(stdoutCopy, STDOUT_FILENO);
 
             int pipedCommands = 0;
             char *combinedCommand = (char *)malloc(strlen(cmdArray[i]) + 1);
@@ -494,9 +494,12 @@ int main(void)
                 pipefd[j] = (int *)malloc(sizeof(int) * 2);
                 pipe(pipefd[j]);
             }
+            int *pids = (int *)malloc(sizeof(int) * pipedCommands);
 
             for (int ii = 0; ii < pipedCommands; ii++)
             {
+                dup2(stdinCopy, STDIN_FILENO);
+                dup2(stdoutCopy, STDOUT_FILENO);
 
                 timeCorrect = 0;
                 char *cmd = pipedCommandArray[ii];
@@ -704,33 +707,91 @@ int main(void)
                     argArray[j] = strtok(NULL, " \t\n");
                 }
 
+                int procId = -2;
                 if (pipedCommands != 1)
                 {
+                    // print command
+                    // printf("Command: %s\n", argArray[0]);
                     // dup pipes
-                                }
-                int isInbuilt = callInbuilt(argArray, args);
 
-                if (!isInbuilt)
-                {
-                    argArray[args] = NULL;
-                    if (!strcmp(argArray[args - 1], "&"))
+                    // execute command
+                    procId = fork();
+                    int pipeIndex = ii - 1;
+                    if (pipeIndex >= 0)
                     {
-                        argArray[args - 1] = NULL;
-                        delegate(argArray[0], argArray, 1);
-                        lastTime = 0;
+                        dup2(pipefd[pipeIndex][0], STDIN_FILENO);
                     }
                     else
                     {
-                        timeCorrect = 0;
-                        lastTime = time(NULL);
-                        delegate(argArray[0], argArray, 0);
-                        lastTime = time(NULL) - lastTime;
-                        timeCorrect = 1;
+                        dup2(stdinCopy, STDIN_FILENO);
                     }
+                    if (pipeIndex + 1 < pipesRequired)
+                    {
+                        dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
+                    }
+                    else
+                    {
+                        dup2(stdoutCopy, STDOUT_FILENO);
+                    }
+
+                    // close all but above
+                    for (int j = 0; j < pipesRequired; j++)
+                    {
+                        if (j != pipeIndex)
+                        {
+                            close(pipefd[j][0]);
+                        }
+                        if (j != pipeIndex + 1)
+                        {
+                            close(pipefd[j][1]);
+                        }
+                    }
+                    pids[ii] = procId;
+                }
+
+                if (procId <= 0)
+                {
+                    // printf("My Pid: %d\nCommand to run: %s\n", getpid(), argArray[0]);
+                    // exec
+                    int execStatus = execvp(argArray[0], argArray);
+                    exit(0);
+                    int isInbuilt = callInbuilt(argArray, args);
+
+                    if (!isInbuilt)
+                    {
+                        argArray[args] = NULL;
+                        if (!strcmp(argArray[args - 1], "&"))
+                        {
+                            argArray[args - 1] = NULL;
+                            delegate(argArray[0], argArray, 1);
+                            lastTime = 0;
+                        }
+                        else
+                        {
+                            timeCorrect = 0;
+                            lastTime = time(NULL);
+                            delegate(argArray[0], argArray, 0);
+                            lastTime = time(NULL) - lastTime;
+                            timeCorrect = 1;
+                        }
+                    }
+
+                    exit(0);
                 }
                 free(argArray);
                 dup2(stdinCopy, STDIN_FILENO);
                 dup2(stdoutCopy, STDOUT_FILENO);
+            }
+            // wait for all pids
+            // close pipes
+            for (int j = 0; j < pipesRequired; j++)
+            {
+                close(pipefd[j][0]);
+                close(pipefd[j][1]);
+            }
+            for (int j = 0; j < pipedCommands; j++)
+            {
+                waitpid(pids[j], NULL, 0);
             }
             free(combinedBackup);
             free(combinedCommand);
