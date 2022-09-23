@@ -98,6 +98,9 @@ void enableRawMode()
 char *showPrompt()
 {
     char *inp = malloc(sizeof(char) * MAX_BUF);
+    // printPrompt();
+    // fgets(inp, MAX_BUF, stdin);
+    // return inp;
     char c;
     while (1)
     {
@@ -407,6 +410,7 @@ int main(void)
     {
         // printf("no");
         char *in = showPrompt();
+
         // printf("Input before copy: %s\n", in);
         // printf("in is: %s", in);
         lastTime = 0;
@@ -462,8 +466,8 @@ int main(void)
         for (int i = 0; i < tokens; i++)
         {
             // reset stdin and stdout
-            // dup2(stdinCopy, STDIN_FILENO);
-            // dup2(stdoutCopy, STDOUT_FILENO);
+            dup2(stdinCopy, STDIN_FILENO);
+            dup2(stdoutCopy, STDOUT_FILENO);
 
             int pipedCommands = 0;
             char *combinedCommand = (char *)malloc(strlen(cmdArray[i]) + 1);
@@ -498,11 +502,12 @@ int main(void)
 
             for (int ii = 0; ii < pipedCommands; ii++)
             {
-                // dup2(stdinCopy, STDIN_FILENO);
-                // dup2(stdoutCopy, STDOUT_FILENO);
-
+                dup2(stdinCopy, STDIN_FILENO);
+                dup2(stdoutCopy, STDOUT_FILENO);
+                // printf("Command: %s\n", pipedCommandArray[ii]);
                 timeCorrect = 0;
                 char *cmd = pipedCommandArray[ii];
+                // printf("%s\n", cmd);
                 // copy
                 char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
                 strcpy(cmdCopy, cmd);
@@ -717,7 +722,7 @@ int main(void)
                         int pipeIndex = ii - 1;
                         if (pipeIndex >= 0)
                         {
-                            printf("Input ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
+                            // printf("Input ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
                             dup2(pipefd[pipeIndex][0], STDIN_FILENO);
                         }
                         else
@@ -726,36 +731,33 @@ int main(void)
                         }
                         if (pipeIndex + 1 < pipesRequired)
                         {
-                            printf("Output ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex);
+                            // printf("Output ran for cmd: %s at pipeindex: %d\n", argArray[0], pipeIndex + 1);
                             dup2(pipefd[pipeIndex + 1][1], STDOUT_FILENO);
                         }
                         else
                         {
-
                             dup2(stdoutCopy, STDOUT_FILENO);
                         }
-
                         // close all
                         for (int j = 0; j < pipesRequired; j++)
                         {
                             close(pipefd[j][0]);
                             close(pipefd[j][1]);
                         }
+                        // mark null in argarray
                     }
-                    // print command
-                    // printf("Command: %s\n", argArray[0]);
-                    // dup pipes
-
-                    // execute command
-                    pids[ii] = procId;
+                    else
+                    {
+                        pids[ii] = procId;
+                    }
                 }
 
                 if (procId <= 0)
                 {
                     // printf("My Pid: %d\nCommand to run: %s\n", getpid(), argArray[0]);
-                    // exec
+                    argArray[args] = NULL;
                     int execStatus = execvp(argArray[0], argArray);
-                    exit(0);
+                    exit(execStatus);
                     int isInbuilt = callInbuilt(argArray, args);
 
                     if (!isInbuilt)
@@ -777,11 +779,11 @@ int main(void)
                         }
                     }
 
-                    exit(0);
+                    // exit(0);
                 }
                 free(argArray);
-                // dup2(stdinCopy, STDIN_FILENO);
-                // dup2(stdoutCopy, STDOUT_FILENO);
+                dup2(stdinCopy, STDIN_FILENO);
+                dup2(stdoutCopy, STDOUT_FILENO);
             }
             // wait for all pids
             // close pipes
@@ -790,10 +792,14 @@ int main(void)
                 close(pipefd[j][0]);
                 close(pipefd[j][1]);
             }
+
             for (int j = 0; j < pipedCommands; j++)
             {
                 waitpid(pids[j], NULL, 0);
             }
+
+            free(pids);
+            free(pipefd);
             free(combinedBackup);
             free(combinedCommand);
             free(pipedCommandArray);
