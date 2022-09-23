@@ -464,285 +464,273 @@ int main(void)
             // reset stdin and stdout
             dup2(stdinCopy, STDIN_FILENO);
             dup2(stdoutCopy, STDOUT_FILENO);
-            timeCorrect = 0;
-            char *cmd = cmdArray[i];
-            // copy
-            char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
-            strcpy(cmdCopy, cmd);
-            // check for input redir
-            int inputIndex = -1;
-            char *inputRedir = strstr(cmdCopy, "<");
-            if (inputRedir != NULL)
+
+            int pipedCommands = 0;
+            char *combinedCommand = (char *)malloc(strlen(cmdArray[i]) + 1);
+            strcpy(combinedCommand, cmdArray[i]);
+            char *combinedBackup = (char *)malloc(strlen(cmdArray[i]) + 1);
+            strcpy(combinedBackup, cmdArray[i]);
+
+            char *pipedCommand = strtok(combinedCommand, "|");
+            while (pipedCommand != NULL)
             {
-                inputIndex = inputRedir - cmdCopy;
-                // remove it
-                cmd[inputIndex] = ' ';
-                cmdCopy[inputIndex] = ' ';
+                pipedCommands++;
+                pipedCommand = strtok(NULL, "|");
             }
-            // printf("Formatted command: %s\n", cmd);
-            // get input file
-            char *inputFile = NULL;
-            if (inputIndex != -1)
+            strcpy(combinedCommand, combinedBackup);
+
+            char **pipedCommandArray = (char **)malloc(sizeof(char *) * pipedCommands);
+            pipedCommandArray[0] = strtok(combinedCommand, "|");
+            for (int j = 1; j < pipedCommands; j++)
             {
-                int skippedFirstSpaces = 0;
-                // inputFile = (char *)malloc(MAX_BUF);
-                int j = 0;
-                for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
+                pipedCommandArray[j] = strtok(NULL, "|");
+            }
+
+            int pipesRequired = pipedCommands - 1;
+            int **pipefd = (int **)malloc(sizeof(int *) * pipesRequired);
+
+            for (int j = 0; j < pipesRequired; j++)
+            {
+                pipefd[j] = (int *)malloc(sizeof(int) * 2);
+                pipe(pipefd[j]);
+            }
+
+            for (int ii = 0; ii < pipedCommands; ii++)
+            {
+
+                timeCorrect = 0;
+                char *cmd = pipedCommandArray[ii];
+                // copy
+                char *cmdCopy = (char *)malloc(strlen(cmd) + 1);
+                strcpy(cmdCopy, cmd);
+                // check for input redir
+                int inputIndex = -1;
+                char *inputRedir = strstr(cmdCopy, "<");
+                if (inputRedir != NULL)
                 {
-                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    inputIndex = inputRedir - cmdCopy;
+                    // remove it
+                    cmd[inputIndex] = ' ';
+                    cmdCopy[inputIndex] = ' ';
+                }
+                // printf("Formatted command: %s\n", cmd);
+                // get input file
+                char *inputFile = NULL;
+                if (inputIndex != -1)
+                {
+                    int skippedFirstSpaces = 0;
+                    // inputFile = (char *)malloc(MAX_BUF);
+                    int j = 0;
+                    for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
                     {
+                        if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            skippedFirstSpaces = 1;
+                            if (cmdCopy[k] == ' ')
+                            {
+                                break;
+                            }
+                            else
+                            {
+
+                                j++;
+                            }
+                        }
+                    }
+                    inputFile = (char *)malloc(j + 1);
+                    skippedFirstSpaces = 0;
+                    j = 0;
+                    for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
+                    {
+                        if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            skippedFirstSpaces = 1;
+                            if (cmdCopy[k] == ' ')
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                inputFile[j++] = cmdCopy[k];
+                                // remove name from cmd
+                                cmd[k] = ' ';
+                                cmdCopy[k] = ' ';
+                            }
+                        }
+                    }
+                    inputFile[j] = '\0';
+                    // check if file exists
+                    FILE *fp = fopen(inputFile, "r");
+                    if (fp == NULL)
+                    {
+                        printf("File %s does not exist\n", inputFile);
+                        // printPrompt();
+                        // fflush(stdout);
                         continue;
                     }
                     else
                     {
-                        skippedFirstSpaces = 1;
-                        if (cmdCopy[k] == ' ')
-                        {
-                            break;
-                        }
-                        else
-                        {
-
-                            j++;
-                        }
+                        dup2(fileno(fp), STDIN_FILENO);
                     }
                 }
-                inputFile = (char *)malloc(j + 1);
-                skippedFirstSpaces = 0;
-                j = 0;
-                for (int k = inputIndex + 1; k < strlen(cmdCopy); k++)
-                {
-                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        skippedFirstSpaces = 1;
-                        if (cmdCopy[k] == ' ')
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            inputFile[j++] = cmdCopy[k];
-                            // remove name from cmd
-                            cmd[k] = ' ';
-                            cmdCopy[k] = ' ';
-                        }
-                    }
-                }
-                inputFile[j] = '\0';
-                // check if file exists
-                FILE *fp = fopen(inputFile, "r");
-                if (fp == NULL)
-                {
-                    printf("File %s does not exist\n", inputFile);
-                    // printPrompt();
-                    // fflush(stdout);
-                    continue;
-                }
-                else
-                {
-                    dup2(fileno(fp), STDIN_FILENO);
-                }
-            }
 
-            // check for output redir
-            int outputIndex = -1;
-            int isAppend = 0;
-            char *outputRedir = strstr(cmdCopy, ">");
+                // check for output redir
+                int outputIndex = -1;
+                int isAppend = 0;
+                char *outputRedir = strstr(cmdCopy, ">");
 
-            if (outputRedir != NULL)
-            {
-                outputIndex = outputRedir - cmdCopy;
-                // check for append
-
-                // remove it
-                cmd[outputIndex] = ' ';
-                cmdCopy[outputIndex] = ' ';
-                if (outputIndex + 1 < strlen(cmdCopy) && cmdCopy[outputIndex + 1] == '>')
+                if (outputRedir != NULL)
                 {
-                    isAppend = 1;
-                    outputIndex++;
+                    outputIndex = outputRedir - cmdCopy;
+                    // check for append
+
+                    // remove it
                     cmd[outputIndex] = ' ';
                     cmdCopy[outputIndex] = ' ';
-                }
-            }
-            // get output file
-            char *outputFile = NULL;
-            if (outputIndex != -1)
-            {
-                int skippedFirstSpaces = 0;
-                // outputFile = (char *)malloc(MAX_BUF);
-                int j = 0;
-                for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
-                {
-                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    if (outputIndex + 1 < strlen(cmdCopy) && cmdCopy[outputIndex + 1] == '>')
                     {
-                        continue;
+                        isAppend = 1;
+                        outputIndex++;
+                        cmd[outputIndex] = ' ';
+                        cmdCopy[outputIndex] = ' ';
                     }
-                    else
+                }
+                // get output file
+                char *outputFile = NULL;
+                if (outputIndex != -1)
+                {
+                    int skippedFirstSpaces = 0;
+                    // outputFile = (char *)malloc(MAX_BUF);
+                    int j = 0;
+                    for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
                     {
-                        skippedFirstSpaces = 1;
-                        if (cmdCopy[k] == ' ')
+                        if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
                         {
-                            break;
+                            continue;
                         }
                         else
                         {
-                            j++;
+                            skippedFirstSpaces = 1;
+                            if (cmdCopy[k] == ' ')
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                j++;
+                            }
                         }
                     }
-                }
-                outputFile = (char *)malloc(j + 1);
-                skippedFirstSpaces = 0;
-                j = 0;
-                for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
-                {
-                    if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
+                    outputFile = (char *)malloc(j + 1);
+                    skippedFirstSpaces = 0;
+                    j = 0;
+                    for (int k = outputIndex + 1; k < strlen(cmdCopy); k++)
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        skippedFirstSpaces = 1;
-                        if (cmdCopy[k] == ' ')
+                        if ((cmdCopy[k] == ' ' || cmdCopy[k] == '\t') && !skippedFirstSpaces)
                         {
-                            break;
+                            continue;
                         }
                         else
                         {
-                            outputFile[j++] = cmdCopy[k];
-                            // remove name from cmd
-                            cmd[k] = ' ';
-                            cmdCopy[k] = ' ';
+                            skippedFirstSpaces = 1;
+                            if (cmdCopy[k] == ' ')
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                outputFile[j++] = cmdCopy[k];
+                                // remove name from cmd
+                                cmd[k] = ' ';
+                                cmdCopy[k] = ' ';
+                            }
                         }
                     }
-                }
-                outputFile[j] = '\0';
+                    outputFile[j] = '\0';
 
-                // if file doesnt exist create using open
-                int outputFd; // = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                    // if file doesnt exist create using open
+                    int outputFd; // = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
-                if (isAppend)
-                {
-                    outputFd = open(outputFile, O_WRONLY | O_CREAT | O_APPEND, 0644);
-                }
-                else
-                {
-                    outputFd = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                    if (isAppend)
+                    {
+                        outputFd = open(outputFile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                    }
+                    else
+                    {
+                        outputFd = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                    }
+
+                    if (outputFd == -1)
+                    {
+                        printf("Error opening file %s\n", outputFile);
+                        printPrompt();
+                        fflush(stdout);
+                    }
+                    else
+                    {
+                        dup2(outputFd, STDOUT_FILENO);
+                    }
                 }
 
-                if (outputFd == -1)
+                // printf("Command: %s | Copy: %s\n", cmd, cmdCopy);
+                // count arguments
+                int args = 0;
+                char *arg = strtok(cmdCopy, " \t\n");
+                while (arg != NULL)
                 {
-                    printf("Error opening file %s\n", outputFile);
-                    printPrompt();
-                    fflush(stdout);
+                    args++;
+                    arg = strtok(NULL, " \t\n");
                 }
-                else
-                {
-                    dup2(outputFd, STDOUT_FILENO);
-                }
-            }
 
-            // printf("Command: %s | Copy: %s\n", cmd, cmdCopy);
-            // count arguments
-            int args = 0;
-            char *arg = strtok(cmdCopy, " \t\n");
-            while (arg != NULL)
-            {
-                args++;
-                arg = strtok(NULL, " \t\n");
-            }
+                free(cmdCopy);
 
-            free(cmdCopy);
+                // create arg array of strings malloc
+                if (args == 0)
+                {
+                    continue;
+                }
+                char **argArray = (char **)malloc(sizeof(char *) * (args + 1));
+                argArray[0] = strtok(cmd, " \t\n");
+                for (int j = 1; j < args; j++)
+                {
+                    argArray[j] = strtok(NULL, " \t\n");
+                }
 
-            // create arg array of strings malloc
-            if (args == 0)
-            {
-                continue;
-            }
-            char **argArray = (char **)malloc(sizeof(char *) * (args + 1));
-            argArray[0] = strtok(cmd, " \t\n");
-            for (int j = 1; j < args; j++)
-            {
-                argArray[j] = strtok(NULL, " \t\n");
-            }
+                int isInbuilt = callInbuilt(argArray, args);
 
-            if (strcmp(argArray[0], "exit") == 0)
-            {
-                exitFlag = 1;
-                break;
-            }
-            else if (strcmp(argArray[0], "pwd") == 0)
-            {
-                pwd();
-            }
-            else if (strcmp(argArray[0], "jobs") == 0)
-            {
-                jobs(argArray, args);
-            }
-            else if (strcmp(argArray[0], "echo") == 0)
-            {
-                echo(argArray, args);
-            }
-            else if (strcmp(argArray[0], "cd") == 0)
-            {
-                cd(argArray, args);
-            }
-            else if (strcmp(argArray[0], "sig") == 0)
-            {
-                sendSignal(argArray, args);
-            }
-            else if (strcmp(argArray[0], "ls") == 0)
-            {
-                ls(argArray, args);
-            }
-            else if (strcmp(argArray[0], "bg") == 0)
-            {
-                resumeBG(argArray, args);
-            }
-            else if (strcmp(argArray[0], "history") == 0)
-            {
-                printHistory();
-            }
-            else if (strcmp(argArray[0], "pinfo") == 0)
-            {
-                if (args == 1)
+                if (!isInbuilt)
                 {
-                    pinfo(-1);
+                    argArray[args] = NULL;
+                    if (!strcmp(argArray[args - 1], "&"))
+                    {
+                        argArray[args - 1] = NULL;
+                        delegate(argArray[0], argArray, 1);
+                        lastTime = 0;
+                    }
+                    else
+                    {
+                        timeCorrect = 0;
+                        lastTime = time(NULL);
+                        delegate(argArray[0], argArray, 0);
+                        lastTime = time(NULL) - lastTime;
+                        timeCorrect = 1;
+                    }
                 }
-                else
-                {
-                    pinfo(atoi(argArray[1]));
-                }
+                free(argArray);
+                dup2(stdinCopy, STDIN_FILENO);
+                dup2(stdoutCopy, STDOUT_FILENO);
             }
-            else if (strcmp(argArray[0], "discover") == 0)
-            {
-                discover(argArray, args);
-            }
-            else
-            {
-                argArray[args] = NULL;
-                if (!strcmp(argArray[args - 1], "&"))
-                {
-                    argArray[args - 1] = NULL;
-                    delegate(argArray[0], argArray, 1);
-                    lastTime = 0;
-                }
-                else
-                {
-                    timeCorrect = 0;
-                    lastTime = time(NULL);
-                    delegate(argArray[0], argArray, 0);
-                    lastTime = time(NULL) - lastTime;
-                    timeCorrect = 1;
-                }
-            }
-            free(argArray);
-            dup2(stdinCopy, STDIN_FILENO);
-            dup2(stdoutCopy, STDOUT_FILENO);
+            free(combinedBackup);
+            free(combinedCommand);
+            free(pipedCommandArray);
         }
 
         free(cmdArray);

@@ -12,7 +12,70 @@
 #include <time.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "history.h"
 #include <signal.h>
+
+int callInbuilt(char *argArray[], int args)
+{
+    int result = 1;
+    if (strcmp(argArray[0], "exit") == 0)
+    {
+        exit(0);
+    }
+    else if (strcmp(argArray[0], "pwd") == 0)
+    {
+        pwd();
+    }
+    else if (strcmp(argArray[0], "jobs") == 0)
+    {
+        jobs(argArray, args);
+    }
+    else if (strcmp(argArray[0], "echo") == 0)
+    {
+        echo(argArray, args);
+    }
+    else if (strcmp(argArray[0], "cd") == 0)
+    {
+        cd(argArray, args);
+    }
+    else if (strcmp(argArray[0], "sig") == 0)
+    {
+        sendSignal(argArray, args);
+    }
+    else if (strcmp(argArray[0], "ls") == 0)
+    {
+        ls(argArray, args);
+    }
+    else if (strcmp(argArray[0], "bg") == 0)
+    {
+        resumeBG(argArray, args);
+    }
+    else if (strcmp(argArray[0], "history") == 0)
+    {
+        printHistory();
+    }
+    else if (strcmp(argArray[0], "pinfo") == 0)
+    {
+        if (args == 1)
+        {
+            pinfo(-1);
+        }
+        else
+        {
+            pinfo(atoi(argArray[1]));
+        }
+    }
+    else if (strcmp(argArray[0], "discover") == 0)
+    {
+        discover(argArray, args);
+    }
+    else
+    {
+        result = 0;
+    }
+
+    return result;
+}
 
 char *parsePathforHome(char *path)
 {

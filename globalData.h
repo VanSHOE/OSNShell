@@ -36,3 +36,4 @@ struct lsLEntry
 int exitFlag;
 char *parsePathforHome(char *path);
 char *reverseParsePath(char *path);
+int callInbuilt(char *argArray[], int argc);
