@@ -744,20 +744,25 @@ int main(void)
                             close(pipefd[j][0]);
                             close(pipefd[j][1]);
                         }
-                        // mark null in argarray
+
+                        int isInbuilt = callInbuilt(argArray, args);
+
+                        if (!isInbuilt)
+                        {
+                            argArray[args] = NULL;
+                            int res = execvp(argArray[0], argArray);
+                            exit(res);
+                        }
+
+                        exit(0);
                     }
                     else
                     {
                         pids[ii] = procId;
                     }
                 }
-
-                if (procId <= 0)
+                else
                 {
-                    // printf("My Pid: %d\nCommand to run: %s\n", getpid(), argArray[0]);
-                    argArray[args] = NULL;
-                    int execStatus = execvp(argArray[0], argArray);
-                    exit(execStatus);
                     int isInbuilt = callInbuilt(argArray, args);
 
                     if (!isInbuilt)
@@ -778,9 +783,11 @@ int main(void)
                             timeCorrect = 1;
                         }
                     }
-
-                    // exit(0);
                 }
+                // printf("My Pid: %d\nCommand to run: %s\n", getpid(), argArray[0]);
+
+                // exit(0);
+
                 free(argArray);
                 dup2(stdinCopy, STDIN_FILENO);
                 dup2(stdoutCopy, STDOUT_FILENO);
@@ -793,10 +800,11 @@ int main(void)
                 close(pipefd[j][1]);
             }
 
-            for (int j = 0; j < pipedCommands; j++)
-            {
-                waitpid(pids[j], NULL, 0);
-            }
+            if (pipedCommands != 1)
+                for (int j = 0; j < pipedCommands; j++)
+                {
+                    waitpid(pids[j], NULL, 0);
+                }
 
             free(pids);
             free(pipefd);
