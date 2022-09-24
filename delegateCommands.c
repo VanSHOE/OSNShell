@@ -16,8 +16,10 @@ void delegate(char *command, char *args[], int background)
 
         for (int i = 0; args[i] != NULL; i++)
         {
-            char *temp = args[i];
-            args[i] = parsePathforHome(args[i]);
+            char *temp = parsePathforHome(args[i]);
+            args[i] = (char *)malloc(strlen(temp) + 1);
+            strcpy(args[i], temp);
+            free(temp);
         }
 
         int ret = execvp(command, args);

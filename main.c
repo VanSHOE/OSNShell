@@ -850,6 +850,10 @@ int main(void)
                             for (int j = 0; j < args; j++)
                             {
                                 stripQuotes(argArray[j]);
+                                char *temp = parsePathforHome(argArray[j]);
+                                argArray[j] = (char *)malloc(strlen(temp) + 1);
+                                strcpy(argArray[j], temp);
+                                free(temp);
                             }
                             int res = execvp(argArray[0], argArray);
                             exit(res);
