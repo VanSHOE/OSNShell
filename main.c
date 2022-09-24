@@ -143,11 +143,6 @@ char *showPrompt()
                 else if (c == 9)
                 { // TAB character
                     // continue;
-                    char **fileList = getFileList(".");
-                    if (fileList == NULL)
-                    {
-                        continue;
-                    }
                     // search for last space else 0
                     int lastSpace = 0;
                     for (int i = 0; i < pt; i++)
@@ -156,9 +151,26 @@ char *showPrompt()
                             lastSpace = i + 1;
                     }
 
-                    int i = 0;
                     char *curPrefix = (char *)malloc(sizeof(char) * (strlen(inp) - lastSpace + 1));
                     strcpy(curPrefix, inp + lastSpace);
+
+                    // check curPrefix is a dir using stat print
+                    struct stat st;
+                    char **fileList = NULL;
+
+                    if (stat(curPrefix, &st) == 0 && S_ISDIR(st.st_mode))
+                    {
+                        fileList = getFileList(curPrefix);
+                    }
+
+                    // char **fileList = getFileList(".");
+                    if (fileList == NULL)
+                    {
+                        continue;
+                    }
+
+                    int i = 0;
+
                     char **filteredList = (char **)malloc(sizeof(char *) * MAX_BUF);
                     int filteredListSize = 0;
                     while (fileList[i] != NULL)

@@ -21,7 +21,7 @@ int callInbuilt(char *argArray[], int args)
     int result = 1;
     if (strcmp(argArray[0], "exit") == 0)
     {
-        exit(0);
+        exitFlag = 1;
     }
     else if (strcmp(argArray[0], "pwd") == 0)
     {
@@ -1264,16 +1264,31 @@ void bringFG(char *args[], int argc)
     tcsetpgrp(STDIN_FILENO, getpgid(backgroundJobs[jobIdx].pid));
     tcsetpgrp(STDOUT_FILENO, getpgid(backgroundJobs[jobIdx].pid));
 
+    int status;
+
     if (kill(backgroundJobs[jobIdx].pid, SIGCONT) == -1)
     {
         printf("Error sending signal.\n");
     }
-    waitpid(backgroundJobs[jobIdx].pid, NULL, WUNTRACED);
+    else
+    {
+        waitpid(backgroundJobs[jobIdx].pid, &status, WUNTRACED);
+    }
     tcsetpgrp(STDIN_FILENO, getpgrp());
     tcsetpgrp(STDOUT_FILENO, getpgrp());
 
     signal(SIGTTOU, SIG_DFL);
     signal(SIGTTIN, SIG_DFL);
 
-    printf("Fg over\n");
+    // printf("Fg over\n");
+    // check status
+    if (WIFEXITED(status) || WIFSIGNALED(status))
+    {
+
+        for (int i = jobIdx; i < curbackgroundJobs - 1; i++)
+        {
+            backgroundJobs[i] = backgroundJobs[i + 1];
+        }
+        curbackgroundJobs--;
+    }
 }
