@@ -154,15 +154,41 @@ char *showPrompt()
                     char *curPrefix = (char *)malloc(sizeof(char) * (strlen(inp) - lastSpace + 1));
                     strcpy(curPrefix, inp + lastSpace);
 
-                    // check curPrefix is a dir using stat print
+                    // check curPrefix is a dir
+                    int lastSlash = -1;
+                    for (int i = 0; i < strlen(curPrefix); i++)
+                    {
+                        if (curPrefix[i] == '/')
+                            lastSlash = i;
+                    }
+
+                    char *lastPath = (char *)malloc(sizeof(char) * (lastSlash + 5));
+                    if (lastSlash == -1)
+                    {
+                        strcpy(lastPath, ".");
+                    }
+                    else
+                    {
+                        strncpy(lastPath, curPrefix, lastSlash + 1);
+                        lastPath[lastSlash] = '\0';
+                    }
+                    // printf("\nLast path: %s\n", lastPath);
+                    // continue;
                     struct stat st;
                     char **fileList = NULL;
 
-                    if (stat(curPrefix, &st) == 0 && S_ISDIR(st.st_mode))
+                    if (stat(lastPath, &st) == 0 && S_ISDIR(st.st_mode))
                     {
-                        fileList = getFileList(curPrefix);
+                        fileList = getFileList(lastPath);
+                        printf("\nGetting filelist at: %s\n", lastPath);
+                        lastSpace = lastSlash + 1;
+                        strcpy(curPrefix, inp + lastSpace);
                     }
-
+                    else
+                    {
+                        fileList = getFileList(".");
+                    }
+                    free(lastPath);
                     // char **fileList = getFileList(".");
                     if (fileList == NULL)
                     {
@@ -181,6 +207,7 @@ char *showPrompt()
                         }
                         i++;
                     }
+                    // printf("Count: %d\n", i);
 
                     if (!filteredListSize)
                     {
