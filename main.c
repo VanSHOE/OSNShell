@@ -191,7 +191,8 @@ char *showPrompt()
                     else
                     {
                         strncpy(lastPath, curPrefix, lastSlash + 1);
-                        lastPath[lastSlash] = '\0';
+                        lastPath[lastSlash] = '/';
+                        lastPath[lastSlash + 1] = '\0';
                     }
 
                     // printf("\nLast path: %s:%d\n", lastPath, strlen(lastPath));

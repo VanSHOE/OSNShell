@@ -21,6 +21,9 @@ int curbackgroundJobs;
 
 double lastTime;
 
+struct job foregroundJobs[10000];
+int curforegroundJobs;
+
 struct lsLEntry
 {
     char fileType;

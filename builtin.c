@@ -1104,9 +1104,19 @@ void pinfo(int pid)
 
 char **getFileList(char *dir)
 {
+    // set root if dir empty
+    char *root = "/";
     DIR *d;
     struct dirent *dirEntry;
-    d = opendir(dir);
+    if (strlen(dir) == 0)
+    {
+        d = opendir(root);
+    }
+    else
+    {
+        d = opendir(dir);
+    }
+
     if (d)
     {
         int count = 0;
