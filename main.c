@@ -479,20 +479,6 @@ void dontExit()
 
 void bgTheFg()
 {
-    printf("I cant DIE: PID: %d\n", getpid());
-    for (int i = 0; i < curforegroundJobs; i++)
-    {
-        setpgid(foregroundJobs[i].pid, 0);
-        printf("Killing: %d\n", foregroundJobs[i].pid);
-        kill(foregroundJobs[i].pid, SIGTTIN);
-        kill(foregroundJobs[i].pid, SIGTSTP);
-        setpgid(foregroundJobs[i].pid, 0);
-        // add to bg
-        backgroundJobs[curbackgroundJobs++] = foregroundJobs[i];
-        // free(foregroundJobs[i].name);
-        // free(foregroundJobs[i].cmd);
-    }
-    curforegroundJobs = 0;
     printf("\n");
     printPrompt();
     fflush(stdout);

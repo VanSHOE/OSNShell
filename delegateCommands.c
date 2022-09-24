@@ -27,7 +27,7 @@ void delegate(char *command, char *args[], int background)
     }
     else
     {
-        // setpgid(pid, pid);
+        setpgid(pid, pid);
         if (background == 0)
         {
             int status;
@@ -46,12 +46,21 @@ void delegate(char *command, char *args[], int background)
 
             foregroundJobs[curforegroundJobs++].cmd = fullCmd;
             printf("Waiting for: %d\n", pid);
+
+            signal(SIGTTOU, SIG_IGN);
+            signal(SIGTTIN, SIG_IGN);
+            tcsetpgrp(STDIN_FILENO, getpgid(pid));
+            tcsetpgrp(STDOUT_FILENO, getpgid(pid));
+
             waitpid(pid, &status, WUNTRACED);
-            // printf("Done waiting");
-            if (WIFEXITED(status))
+
+            tcsetpgrp(STDIN_FILENO, getpgrp());
+            tcsetpgrp(STDOUT_FILENO, getpgrp());
+            signal(SIGTTIN, SIG_DFL);
+            signal(SIGTTOU, SIG_DFL);
+            // check if sigstopped
+            if (!WIFSTOPPED(status))
             {
-                // printf("%d", WEXITSTATUS(status));
-                // delete from fg
                 for (int i = 0; i < curforegroundJobs; i++)
                 {
                     if (foregroundJobs[i].pid == pid)
@@ -66,6 +75,36 @@ void delegate(char *command, char *args[], int background)
                         break;
                     }
                 }
+            }
+            else
+            {
+                for (int i = 0; i < curforegroundJobs; i++)
+                {
+                    setpgid(foregroundJobs[i].pid, 0);
+                    kill(foregroundJobs[i].pid, SIGTTIN);
+                    kill(foregroundJobs[i].pid, SIGTSTP);
+
+                    backgroundJobs[curbackgroundJobs++] = foregroundJobs[i];
+                    for (int j = i; j < curforegroundJobs - 1; j++)
+                    {
+                        foregroundJobs[j] = foregroundJobs[j + 1];
+                    }
+                    curforegroundJobs--;
+                }
+                curforegroundJobs = 0;
+                printf("\n");
+                printPrompt();
+
+                fflush(stdout);
+            }
+            // printf("Done waiting");
+            // printf("%d", WEXITSTATUS(status));
+            if (WIFEXITED(status))
+            {
+                // printf("%d", WEXITSTATUS(status));
+                // printf("Add");
+                // delete from fg
+
                 if (WEXITSTATUS(status) == 255)
                 {
                     printf("%s: command not found\n", command);

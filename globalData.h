@@ -41,3 +41,4 @@ char *parsePathforHome(char *path);
 char *reverseParsePath(char *path);
 int callInbuilt(char *argArray[], int argc);
 void stripQuotes(char *str);
+void printPrompt();
