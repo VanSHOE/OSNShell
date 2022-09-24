@@ -144,15 +144,15 @@ char *showPrompt()
                 { // TAB character
                     // continue;
                     // search for last space else 0
-                    int lastSpace = 0;
+                    int prefStart = 0;
                     for (int i = 0; i < pt; i++)
                     {
                         if (inp[i] == ' ')
-                            lastSpace = i + 1;
+                            prefStart = i + 1;
                     }
 
-                    char *curPrefix = (char *)malloc(sizeof(char) * (strlen(inp) - lastSpace + 1));
-                    strcpy(curPrefix, inp + lastSpace);
+                    char *curPrefix = (char *)malloc(sizeof(char) * (strlen(inp) - prefStart + 1));
+                    strcpy(curPrefix, inp + prefStart);
 
                     // check curPrefix is a dir
                     int lastSlash = -1;
@@ -181,9 +181,9 @@ char *showPrompt()
                     {
                         fileList = getFileList(lastPath);
                         // printf("\nGetting filelist at: %s with lastslash at: %d\n", lastPath, lastSlash);
-                        lastSpace += lastSlash + 1;
+                        prefStart += lastSlash + 1;
 
-                        strcpy(curPrefix, inp + lastSpace);
+                        strcpy(curPrefix, inp + prefStart);
                         // printf("Latest prefix: %s\n", curPrefix);
                     }
                     else
@@ -228,15 +228,15 @@ char *showPrompt()
                     else if (filteredListSize == 1)
                     {
                         // only one file, directly put it in input
-                        for (int i = lastSpace; i < pt; i++)
+                        for (int i = prefStart; i < pt; i++)
                         {
                             printf("\b \b");
                         }
-                        for (int i = lastSpace; i < pt; i++)
+                        for (int i = prefStart; i < pt; i++)
                         {
                             inp[i] = '\0';
                         }
-                        pt = lastSpace;
+                        pt = prefStart;
                         for (int i = 0; i < strlen(filteredList[0]); i++)
                         {
                             inp[pt++] = filteredList[0][i];
@@ -300,15 +300,15 @@ char *showPrompt()
                     // fflush(stdout);
                     if (strlen(prefix) > strlen(curPrefix))
                     {
-                        for (int i = lastSpace; i < pt; i++)
+                        for (int i = prefStart; i < pt; i++)
                         {
                             printf("\b \b");
                         }
-                        for (int i = lastSpace; i < pt; i++)
+                        for (int i = prefStart; i < pt; i++)
                         {
                             inp[i] = '\0';
                         }
-                        pt = lastSpace;
+                        pt = prefStart;
                         for (int i = 0; i < strlen(prefix); i++)
                         {
                             inp[pt++] = prefix[i];
