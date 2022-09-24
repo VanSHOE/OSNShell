@@ -16,6 +16,27 @@
 #include <termios.h>
 #include <ctype.h>
 
+void stripQuotes(char *str)
+{
+    // printf("\nBefore: %s\n", str);
+    int newTermIndex = strlen(str) - 2;
+
+    if (newTermIndex < 0)
+        return;
+
+    // strip quotes single and double
+    if ((str[0] == '\'' && str[strlen(str) - 1] == '\'') || (str[0] == '\"' && str[strlen(str) - 1] == '\"'))
+    {
+        for (int i = 0; i < strlen(str) - 1; i++)
+        {
+            str[i] = str[i + 1];
+        }
+        str[newTermIndex] = '\0';
+    }
+
+    // printf("After: %s\n", str);
+}
+
 char *commonPrefix(char *str1, char *str2)
 {
     // find the longest prefix common to both strings
@@ -826,6 +847,10 @@ int main(void)
                         if (!isInbuilt)
                         {
                             argArray[args] = NULL;
+                            for (int j = 0; j < args; j++)
+                            {
+                                stripQuotes(argArray[j]);
+                            }
                             int res = execvp(argArray[0], argArray);
                             exit(res);
                         }
@@ -843,6 +868,10 @@ int main(void)
 
                     if (!isInbuilt)
                     {
+                        for (int j = 0; j < args; j++)
+                        {
+                            stripQuotes(argArray[j]);
+                        }
                         argArray[args] = NULL;
                         if (!strcmp(argArray[args - 1], "&"))
                         {
