@@ -31,10 +31,41 @@ void delegate(char *command, char *args[], int background)
         if (background == 0)
         {
             int status;
-            waitpid(pid, &status, 0);
+            foregroundJobs[curforegroundJobs].pid = pid;
+            foregroundJobs[curforegroundJobs].name = (char *)malloc(strlen(command) + 1);
+            strcpy(foregroundJobs[curforegroundJobs].name, command);
+
+            // copy full command with args
+            char *fullCmd = (char *)malloc(MAX_BUF);
+            strcpy(fullCmd, command);
+            for (int i = 1; args[i] != NULL; i++)
+            {
+                strcat(fullCmd, " ");
+                strcat(fullCmd, args[i]);
+            }
+
+            foregroundJobs[curforegroundJobs++].cmd = fullCmd;
+            printf("Waiting for: %d\n", pid);
+            waitpid(pid, &status, WUNTRACED);
+            // printf("Done waiting");
             if (WIFEXITED(status))
             {
                 // printf("%d", WEXITSTATUS(status));
+                // delete from fg
+                for (int i = 0; i < curforegroundJobs; i++)
+                {
+                    if (foregroundJobs[i].pid == pid)
+                    {
+                        free(foregroundJobs[i].name);
+                        free(foregroundJobs[i].cmd);
+                        for (int j = i; j < curforegroundJobs - 1; j++)
+                        {
+                            foregroundJobs[j] = foregroundJobs[j + 1];
+                        }
+                        curforegroundJobs--;
+                        break;
+                    }
+                }
                 if (WEXITSTATUS(status) == 255)
                 {
                     printf("%s: command not found\n", command);

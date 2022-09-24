@@ -465,6 +465,34 @@ void childDead()
 
 void dontExit()
 {
+    for (int i = 0; i < curforegroundJobs; i++)
+    {
+        kill(foregroundJobs[i].pid, SIGINT);
+        free(foregroundJobs[i].name);
+        free(foregroundJobs[i].cmd);
+    }
+    curforegroundJobs = 0;
+    printf("\n");
+    printPrompt();
+    fflush(stdout);
+}
+
+void bgTheFg()
+{
+    printf("I cant DIE: PID: %d\n", getpid());
+    for (int i = 0; i < curforegroundJobs; i++)
+    {
+        setpgid(foregroundJobs[i].pid, 0);
+        printf("Killing: %d\n", foregroundJobs[i].pid);
+        kill(foregroundJobs[i].pid, SIGTTIN);
+        kill(foregroundJobs[i].pid, SIGTSTP);
+        setpgid(foregroundJobs[i].pid, 0);
+        // add to bg
+        backgroundJobs[curbackgroundJobs++] = foregroundJobs[i];
+        // free(foregroundJobs[i].name);
+        // free(foregroundJobs[i].cmd);
+    }
+    curforegroundJobs = 0;
     printf("\n");
     printPrompt();
     fflush(stdout);
@@ -479,6 +507,14 @@ int main(void)
     ctrlC.sa_flags = SA_RESTART;
 
     sigaction(SIGINT, &ctrlC, NULL);
+
+    struct sigaction ctrlZ;
+
+    ctrlZ.sa_handler = bgTheFg;
+    sigemptyset(&ctrlZ.sa_mask);
+    ctrlZ.sa_flags = SA_RESTART;
+
+    sigaction(SIGTSTP, &ctrlZ, NULL);
 
     struct sigaction child;
     child.sa_handler = childDead;
@@ -502,6 +538,7 @@ int main(void)
     while (!exitFlag)
     {
         // printf("no");
+        curforegroundJobs = 0;
         char *in = showPrompt();
 
         // printf("Input before copy: %s\n", in);
@@ -871,6 +908,12 @@ int main(void)
                     else
                     {
                         pids[ii] = procId;
+                        foregroundJobs[curforegroundJobs].pid = procId;
+                        foregroundJobs[curforegroundJobs].name = (char *)malloc(strlen(argArray[0]) + 1);
+                        strcpy(foregroundJobs[curforegroundJobs].name, argArray[0]);
+
+                        foregroundJobs[curforegroundJobs++].cmd = (char *)malloc(strlen(cmd) + 1);
+                        strcpy(foregroundJobs[curforegroundJobs - 1].cmd, cmd);
                     }
                 }
                 else
@@ -920,6 +963,20 @@ int main(void)
                 for (int j = 0; j < pipedCommands; j++)
                 {
                     waitpid(pids[j], NULL, 0);
+                    for (int i = 0; i < curforegroundJobs; i++)
+                    {
+                        if (foregroundJobs[i].pid == pids[j])
+                        {
+                            free(foregroundJobs[i].name);
+                            free(foregroundJobs[i].cmd);
+                            for (int j = i; j < curforegroundJobs - 1; j++)
+                            {
+                                foregroundJobs[j] = foregroundJobs[j + 1];
+                            }
+                            curforegroundJobs--;
+                            break;
+                        }
+                    }
                 }
 
             free(pids);
