@@ -193,15 +193,19 @@ char *showPrompt()
                         strncpy(lastPath, curPrefix, lastSlash + 1);
                         lastPath[lastSlash] = '\0';
                     }
-                    // printf("\nLast path: %s\n", lastPath);
+
+                    // printf("\nLast path: %s:%d\n", lastPath, strlen(lastPath));
                     // continue;
                     struct stat st;
                     char **fileList = NULL;
+                    char *rectifiedLastPath = parsePathforHome(lastPath);
 
-                    if (stat(lastPath, &st) == 0 && S_ISDIR(st.st_mode))
+                    // printf("\nRectified path: %s\n", rectifiedLastPath);
+
+                    if (stat(rectifiedLastPath, &st) == 0 && S_ISDIR(st.st_mode))
                     {
-                        fileList = getFileList(lastPath);
-                        // printf("\nGetting filelist at: %s with lastslash at: %d\n", lastPath, lastSlash);
+                        fileList = getFileList(rectifiedLastPath);
+                        // printf("\nGetting filelist at: %s with last slash at: %d\n", lastPath, lastSlash);
                         prefStart += lastSlash + 1;
 
                         strcpy(curPrefix, inp + prefStart);
@@ -210,6 +214,8 @@ char *showPrompt()
                     else
                     {
                         fileList = getFileList(".");
+
+                        strcpy(rectifiedLastPath, ".");
                     }
 
                     // char **fileList = getFileList(".");
@@ -266,8 +272,8 @@ char *showPrompt()
 
                         // check if its a file or dir
                         struct stat st;
-                        char *path = (char *)malloc(sizeof(char) * (strlen(filteredList[0]) + strlen(lastPath) + 2));
-                        strcpy(path, lastPath);
+                        char *path = (char *)malloc(sizeof(char) * (strlen(filteredList[0]) + strlen(rectifiedLastPath) + 2));
+                        strcpy(path, rectifiedLastPath);
                         free(lastPath);
                         strcat(path, "/");
                         strcat(path, filteredList[0]);

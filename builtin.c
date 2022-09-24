@@ -88,7 +88,7 @@ char *parsePathforHome(char *path)
         return path;
 
     char *newPath = (char *)malloc(sizeof(char) * (strlen(path) + strlen(shellHome) + 1));
-
+    // printf("Path in parse: %s", path);
     if ((strlen(path) == 1 && path[0] == '~') || (path[0] == '~' && path[1] == '/'))
     {
         strcpy(newPath, shellHome);
@@ -98,7 +98,7 @@ char *parsePathforHome(char *path)
     {
         strcpy(newPath, path);
     }
-
+    // printf("What is happening...: %s", newPath);
     return newPath;
 }
 
