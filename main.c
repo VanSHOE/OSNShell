@@ -172,7 +172,7 @@ char *showPrompt()
                         strncpy(lastPath, curPrefix, lastSlash + 1);
                         lastPath[lastSlash] = '\0';
                     }
-                    // printf("\nLast path: %s\n", lastPath);
+                    printf("\nLast path: %s\n", lastPath);
                     // continue;
                     struct stat st;
                     char **fileList = NULL;
@@ -180,9 +180,11 @@ char *showPrompt()
                     if (stat(lastPath, &st) == 0 && S_ISDIR(st.st_mode))
                     {
                         fileList = getFileList(lastPath);
-                        printf("\nGetting filelist at: %s\n", lastPath);
-                        lastSpace = lastSlash + 1;
+                        printf("\nGetting filelist at: %s with lastslash at: %d\n", lastPath, lastSlash);
+                        lastSpace = lastSlash + 1; // TODO: LAST SLASH AND LAST SPACE DIFFERENT 0 INDEX
+
                         strcpy(curPrefix, inp + lastSpace);
+                        printf("Latest prefix: %s\n", curPrefix);
                     }
                     else
                     {
