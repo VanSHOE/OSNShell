@@ -172,7 +172,7 @@ char *showPrompt()
                         strncpy(lastPath, curPrefix, lastSlash + 1);
                         lastPath[lastSlash] = '\0';
                     }
-                    printf("\nLast path: %s\n", lastPath);
+                    // printf("\nLast path: %s\n", lastPath);
                     // continue;
                     struct stat st;
                     char **fileList = NULL;
@@ -180,17 +180,17 @@ char *showPrompt()
                     if (stat(lastPath, &st) == 0 && S_ISDIR(st.st_mode))
                     {
                         fileList = getFileList(lastPath);
-                        printf("\nGetting filelist at: %s with lastslash at: %d\n", lastPath, lastSlash);
-                        lastSpace = lastSlash + 1; // TODO: LAST SLASH AND LAST SPACE DIFFERENT 0 INDEX
+                        // printf("\nGetting filelist at: %s with lastslash at: %d\n", lastPath, lastSlash);
+                        lastSpace += lastSlash + 1;
 
                         strcpy(curPrefix, inp + lastSpace);
-                        printf("Latest prefix: %s\n", curPrefix);
+                        // printf("Latest prefix: %s\n", curPrefix);
                     }
                     else
                     {
                         fileList = getFileList(".");
                     }
-                    free(lastPath);
+
                     // char **fileList = getFileList(".");
                     if (fileList == NULL)
                     {
@@ -221,6 +221,7 @@ char *showPrompt()
                         }
                         free(fileList);
                         free(curPrefix);
+                        free(lastPath);
                         free(filteredList);
                         continue;
                     }
@@ -244,9 +245,13 @@ char *showPrompt()
 
                         // check if its a file or dir
                         struct stat st;
-                        char *path = (char *)malloc(sizeof(char) * (strlen(filteredList[0]) + 2));
-                        strcpy(path, filteredList[0]);
+                        char *path = (char *)malloc(sizeof(char) * (strlen(filteredList[0]) + strlen(lastPath) + 2));
+                        strcpy(path, lastPath);
+                        free(lastPath);
                         strcat(path, "/");
+                        strcat(path, filteredList[0]);
+                        // printf("\nChecking path: %s\n", path);
+
                         if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
                         {
                             inp[pt++] = '/';
@@ -257,6 +262,7 @@ char *showPrompt()
                             inp[pt++] = ' ';
                             printf(" ");
                         }
+                        free(path);
                         i = 0;
                         while (fileList[i] != NULL)
                         {
@@ -268,6 +274,7 @@ char *showPrompt()
                         free(filteredList);
                         continue;
                     }
+                    free(lastPath);
                     // print filtered list
                     printf("\n");
                     for (int i = 0; i < filteredListSize; i++)
