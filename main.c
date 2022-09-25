@@ -307,6 +307,9 @@ char *showPrompt()
                     printf("\n");
                     for (int i = 0; i < filteredListSize; i++)
                     {
+                        if (((strcmp(filteredList[i], ".") == 0) || (strcmp(filteredList[i], "..") == 0)) && (strcmp(curPrefix, ".")))
+                            continue;
+
                         char *filteredPath = (char *)malloc(sizeof(char) * (strlen(filteredList[i]) + strlen(rectifiedLastPath) + 5));
                         strcpy(filteredPath, rectifiedLastPath);
                         strcat(filteredPath, "/");
