@@ -45,7 +45,7 @@ void delegate(char *command, char *args[], int background)
             }
 
             foregroundJobs[curforegroundJobs++].cmd = fullCmd;
-            printf("Waiting for: %d\n", pid);
+            // printf("Waiting for: %d\n", pid);
 
             signal(SIGTTOU, SIG_IGN);
             signal(SIGTTIN, SIG_IGN);
