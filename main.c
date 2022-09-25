@@ -307,7 +307,21 @@ char *showPrompt()
                     printf("\n");
                     for (int i = 0; i < filteredListSize; i++)
                     {
-                        printf("%s\n", filteredList[i]);
+                        char *filteredPath = (char *)malloc(sizeof(char) * (strlen(filteredList[i]) + strlen(rectifiedLastPath) + 5));
+                        strcpy(filteredPath, rectifiedLastPath);
+                        strcat(filteredPath, "/");
+                        strcat(filteredPath, filteredList[i]);
+                        printf("%s", filteredList[i]);
+
+                        // check if dir
+                        struct stat st;
+                        if (stat(filteredPath, &st) == 0 && S_ISDIR(st.st_mode))
+                        {
+                            printf("/");
+                        }
+
+                        printf("\n");
+                        free(filteredPath);
                     }
                     printPrompt();
                     // printf("New Prompt");
